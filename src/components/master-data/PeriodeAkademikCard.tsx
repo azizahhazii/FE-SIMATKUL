@@ -1,24 +1,24 @@
-import { useState, useRef, useEffect } from 'react'
-import { Button, Text } from 'assets-design-system'
-import { MenuDotsIcon } from '../icons/MenuDotsIcon'
+import { useState, useRef, useEffect } from "react";
+import { Button, Text } from "assets-design-system";
+import { MenuDotsIcon } from "../icons/MenuDotsIcon";
 
-import BookmarkIcon from '@solar-icons/react/school/BookMarkSquare'
-import ArrowRightUp from '@solar-icons/react/arrows/ArrowRightUp'
-import Key from '@solar-icons/react/security/Key'
-import UserId from '@solar-icons/react/users/UserId'
-import UsersGroupRounded from '@solar-icons/react/users/UsersGroupRounded'
-import ClockCircle from '@solar-icons/react/time/ClockCircle'
-import Pen from '@solar-icons/react/messages/Pen'
-import TrashBinMinimalistic from '@solar-icons/react/ui/TrashBinMinimalistic'
-import { IconStat } from './IconStat'
-import type { PeriodeAkademik } from '../../types/periodeAkademik'
+import BookmarkIcon from "@solar-icons/react/school/BookmarkSquare";
+import ArrowRightUp from "@solar-icons/react/arrows/ArrowRightUp";
+import Key from "@solar-icons/react/security/KeySquare";
+import UserId from "@solar-icons/react/users/UserId";
+import UsersGroupRounded from "@solar-icons/react/users/UsersGroupTwoRounded";
+import ClockCircle from "@solar-icons/react/time/ClockSquare";
+import Pen from "@solar-icons/react/messages/Pen";
+import TrashBinMinimalistic from "@solar-icons/react/ui/TrashBinMinimalistic";
+import { IconStat } from "./IconStat";
+import type { PeriodeAkademik } from "../../types/periodeAkademik";
 
 interface PeriodeAkademikCardProps {
-  periode: PeriodeAkademik
-  onOpen?: (id: string) => void
-  onMoreClick?: (id: string) => void
-  onEdit?: (periode: PeriodeAkademik) => void
-  onDelete?: (periode: PeriodeAkademik) => void
+  periode: PeriodeAkademik;
+  onOpen?: (id: string) => void;
+  onMoreClick?: (id: string) => void;
+  onEdit?: (periode: PeriodeAkademik) => void;
+  onDelete?: (periode: PeriodeAkademik) => void;
 }
 
 export function PeriodeAkademikCard({
@@ -28,18 +28,18 @@ export function PeriodeAkademikCard({
   onEdit,
   onDelete,
 }: PeriodeAkademikCardProps) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false)
+        setIsMenuOpen(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <div className="flex w-full flex-col gap-6 rounded-3 bg-white p-6 shadow-e1">
@@ -62,37 +62,40 @@ export function PeriodeAkademikCard({
               aria-label="Opsi lainnya"
               iconLeft={<MenuDotsIcon className="h-6 w-6" />}
               onClick={() => {
-                setIsMenuOpen(!isMenuOpen)
-                onMoreClick?.(periode.id)
+                setIsMenuOpen(!isMenuOpen);
+                onMoreClick?.(periode.id);
               }}
             />
 
             {isMenuOpen && (
-              <div className="absolute right-0 top-11 z-20 flex w-32 flex-col overflow-hidden rounded-2xl border border-neutral-100 bg-white p-2 shadow-xl backdrop-blur-sm">
+              <div className="absolute right-0 top-11 z-20 flex w-40 flex-col overflow-hidden rounded-2xl border border-neutral-100 bg-white p-2 shadow-xl backdrop-blur-sm">
                 {/* Tombol Edit */}
                 <button
                   type="button"
                   onClick={() => {
-                    setIsMenuOpen(false)
-                    onEdit?.(periode)
+                    setIsMenuOpen(false);
+                    onEdit?.(periode);
                   }}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold text-[#0097A7] hover:bg-[#E0F7FA]/60 transition"
+                  className="flex items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2 text-xs font-semibold text-neutral-1000 hover:bg-neutral-300 transition"
                 >
-                  <Pen weight="BoldDuotone" className="h-4 w-4 text-[#0097A7]" />
-                  Edit
+                  <Pen weight="BoldDuotone" className="h-4 w-4 shrink-0" />
+                  Edit data
                 </button>
 
                 {/* Tombol Hapus */}
                 <button
                   type="button"
                   onClick={() => {
-                    setIsMenuOpen(false)
-                    onDelete?.(periode)
+                    setIsMenuOpen(false);
+                    onDelete?.(periode);
                   }}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold text-red-500 hover:bg-red-50 transition"
+                  className="flex items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2 text-xs font-semibold text-neutral-1000 hover:bg-neutral-300 transition"
                 >
-                  <TrashBinMinimalistic weight="BoldDuotone" className="h-4 w-4 text-red-500" />
-                  Hapus
+                  <TrashBinMinimalistic
+                    weight="BoldDuotone"
+                    className="h-4 w-4 shrink-0"
+                  />
+                  Delete data
                 </button>
               </div>
             )}
@@ -109,13 +112,33 @@ export function PeriodeAkademikCard({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-6">
-        <IconStat icon={<BookmarkIcon className="h-6 w-6" />} value={periode.jumlahKurikulum} label="Data Kurikulum" />
-        <IconStat icon={<Key weight="BoldDuotone" />} value={periode.jumlahRuang} label="Daftar Ruang" />
-        <IconStat icon={<UserId weight="BoldDuotone" />} value={periode.jumlahDosen} label="Daftar Dosen" />
-        <IconStat icon={<UsersGroupRounded weight="BoldDuotone" />} value={periode.jumlahKelas} label="Daftar Kelas" />
-        <IconStat icon={<ClockCircle weight="BoldDuotone" />} value={periode.jumlahSesi} label="Sesi" />
+      <div className="flex flex-wrap items-center gap-4">
+        <IconStat
+          icon={<BookmarkIcon weight="BoldDuotone" className="h-6 w-6" />}
+          value={periode.jumlahKurikulum}
+          label="Data Kurikulum"
+        />
+        <IconStat
+          icon={<Key weight="BoldDuotone" />}
+          value={periode.jumlahRuang}
+          label="Daftar Ruang"
+        />
+        <IconStat
+          icon={<UserId weight="BoldDuotone" />}
+          value={periode.jumlahDosen}
+          label="Daftar Dosen"
+        />
+        <IconStat
+          icon={<UsersGroupRounded weight="BoldDuotone" />}
+          value={periode.jumlahKelas}
+          label="Daftar Kelas"
+        />
+        <IconStat
+          icon={<ClockCircle weight="BoldDuotone" />}
+          value={periode.jumlahSesi}
+          label="Sesi"
+        />
       </div>
     </div>
-  )
+  );
 }

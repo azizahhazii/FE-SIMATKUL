@@ -76,7 +76,11 @@ export function Login() {
           status={usernameError ? "error" : "default"}
           helperText={usernameError ?? undefined}
           leftIcon={
-            <User size={14} weight="Bold" color="var(--color-neutral-700)" />
+            <User
+              size={14}
+              weight="BoldDuotone"
+              color="var(--color-neutral-700)"
+            />
           }
         />
 
@@ -87,7 +91,11 @@ export function Login() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           leftIcon={
-            <Lock size={14} weight="Bold" color="var(--color-neutral-700)" />
+            <Lock
+              size={14}
+              weight="BoldDuotone"
+              color="var(--color-neutral-700)"
+            />
           }
           rightIcon={
             <button
@@ -99,14 +107,14 @@ export function Login() {
               {showPassword ? (
                 <Eye
                   size={20}
-                  weight="Bold"
+                  weight="BoldDuotone"
                   color="var(--color-neutral-700)"
                   className="translate-y-[3px]"
                 />
               ) : (
                 <EyeClosed
                   size={20}
-                  weight="Bold"
+                  weight="BoldDuotone"
                   color="var(--color-neutral-700)"
                   className="translate-y-[3px]"
                 />

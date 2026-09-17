@@ -14,21 +14,21 @@ export function DashboardLayout() {
   const items: SidebarItem[] = [
     {
       key: "master-data",
-      icon: <Database weight="Bold" />,
+      icon: <Database weight="BoldDuotone" />,
       label: "Master Data",
       active: location.pathname.startsWith("/master-data"),
       onClick: () => navigate("/master-data"),
     },
     {
       key: "penjadwalan",
-      icon: <CalendarMark weight="Bold" />,
+      icon: <CalendarMark weight="BoldDuotone" />,
       label: "Penjadwalan",
       active: location.pathname.startsWith("/penjadwalan"),
       onClick: () => navigate("/penjadwalan"),
     },
     {
       key: "hasil",
-      icon: <DocumentText weight="Bold" />,
+      icon: <DocumentText weight="BoldDuotone" />,
       label: "Hasil",
       active: location.pathname.startsWith("/laporan"),
       onClick: () => navigate("/laporan"),
@@ -41,7 +41,7 @@ export function DashboardLayout() {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-screen overflow-hidden">
       <Sidebar
         logo={
           <div className="flex items-center gap-2">
@@ -53,7 +53,7 @@ export function DashboardLayout() {
         user={{ name: user?.name ?? "Admin" }}
         onLogout={handleLogout}
       />
-      <main className="flex-1 bg-neutral-300 p-10">
+      <main className="flex-1 overflow-y-auto bg-neutral-300 p-10">
         <Outlet />
       </main>
     </div>
