@@ -4,6 +4,7 @@ import AltArrowDown from "@solar-icons/react/arrows/AltArrowDown";
 export interface SelectOption {
   value: string;
   label: string;
+  disabled?: boolean;
 }
 
 interface SelectFieldProps {
@@ -18,12 +19,7 @@ interface SelectFieldProps {
 }
 
 /**
- * Select satu-pilihan yang tampilannya persis Input "Large" dari design system
- * (label b2, border 1.5px neutral-500, radius-3, ikon chevron di kanan).
- *
- * Dropdown bawaan design system tidak dipakai di sini karena itu multi-select
- * (tiap opsi punya checkbox), sedangkan di Figma semua dropdown Master Data
- * hanya boleh memilih satu nilai.
+ * Select satu pilihan.
  */
 export function SelectField({
   label,
@@ -36,6 +32,7 @@ export function SelectField({
   id,
 }: SelectFieldProps) {
   const autoId = useId();
+
   const selectId = id ?? autoId;
 
   return (
@@ -43,7 +40,9 @@ export function SelectField({
       {label && (
         <label
           htmlFor={selectId}
-          className={`text-b2 ${disabled ? "text-neutral-900" : "text-neutral-1000"}`}
+          className={`text-b2 ${
+            disabled ? "text-neutral-900" : "text-neutral-1000"
+          }`}
         >
           {label}
         </label>
@@ -77,8 +76,13 @@ export function SelectField({
               {placeholder}
             </option>
           )}
+
           {options.map((option) => (
-            <option key={option.value} value={option.value}>
+            <option
+              key={option.value}
+              value={option.value}
+              disabled={option.disabled}
+            >
               {option.label}
             </option>
           ))}
@@ -92,7 +96,9 @@ export function SelectField({
 
       {helperText && (
         <p
-          className={`text-b3 ${disabled ? "text-neutral-600" : "text-neutral-700"}`}
+          className={`text-b3 ${
+            disabled ? "text-neutral-600" : "text-neutral-700"
+          }`}
         >
           {helperText}
         </p>
