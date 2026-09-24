@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 import AltArrowDown from "@solar-icons/react/arrows/AltArrowDown";
 
 export interface SelectOption {
@@ -6,7 +6,7 @@ export interface SelectOption {
   label: string;
 }
 
-interface SelectFieldProps {
+export interface SelectFieldProps {
   label?: string;
   placeholder?: string;
   options: SelectOption[];
@@ -15,16 +15,10 @@ interface SelectFieldProps {
   helperText?: string;
   disabled?: boolean;
   id?: string;
+  leftIcon?: ReactNode;
+  className?: string;
 }
 
-/**
- * Select satu-pilihan yang tampilannya persis Input "Large" dari design system
- * (label b2, border 1.5px neutral-500, radius-3, ikon chevron di kanan).
- *
- * Dropdown bawaan design system tidak dipakai di sini karena itu multi-select
- * (tiap opsi punya checkbox), sedangkan di Figma semua dropdown Master Data
- * hanya boleh memilih satu nilai.
- */
 export function SelectField({
   label,
   placeholder,
@@ -34,6 +28,8 @@ export function SelectField({
   helperText,
   disabled = false,
   id,
+  leftIcon,
+  className = "",
 }: SelectFieldProps) {
   const autoId = useId();
   const selectId = id ?? autoId;
@@ -55,15 +51,26 @@ export function SelectField({
           ${
             disabled
               ? "border-neutral-400 bg-neutral-200"
-              : "border-neutral-500 bg-transparent hover:border-neutral-700"
-          }`}
+              : "border-neutral-500 bg-neutral-100 hover:border-neutral-700"
+          } ${className}`}
       >
+        {leftIcon && (
+          <span
+            className={`pointer-events-none absolute left-3 flex size-6 shrink-0 items-center justify-center ${
+              disabled ? "text-neutral-600" : "text-neutral-1000"
+            }`}
+          >
+            {leftIcon}
+          </span>
+        )}
+
         <select
           id={selectId}
           value={value}
           disabled={disabled}
           onChange={(e) => onChange(e.target.value)}
-          className={`min-w-0 flex-1 appearance-none bg-transparent p-3 pr-11 text-b2 outline-none
+          className={`min-w-0 flex-1 appearance-none bg-transparent pr-11 text-b2 outline-none
+            ${leftIcon ? "py-3 pl-11" : "p-3"}
             ${
               disabled
                 ? "text-neutral-600"

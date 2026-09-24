@@ -3,6 +3,7 @@ import { Login } from "../pages/Login/Login";
 import { DashboardLayout } from "../layouts/DashboardLayout";
 import { ProtectedRoute } from "../context/ProtectedRoute";
 import { MasterDataRoutes } from "./masterData";
+import { LaporanRoutes } from "./laporan";
 
 function Placeholder({ label }: { label: string }) {
   return <p className="text-b1">Halaman {label} (nnt dl sbr)</p>;
@@ -25,7 +26,8 @@ export function AppRoutes() {
           path="penjadwalan"
           element={<Placeholder label="Penjadwalan" />}
         />
-        <Route path="laporan/*" element={<Placeholder label="Hasil" />} />
+        {/* Mengganti Placeholder dengan LaporanRoutes */}
+        <Route path="laporan/*" element={<LaporanRoutes />} />
       </Route>
     </Routes>
   );

@@ -131,7 +131,7 @@ export function Kelas() {
           {filtered.length > 0 ? (
             filtered.map((group) => (
               <div key={group.id} className="flex flex-col">
-                <div className="flex items-center justify-between border-b border-neutral-600 bg-white px-3 py-2">
+                <div className="flex items-center justify-between border-b border-neutral-600 bg-neutral-400 px-3 py-2">
                   <span className="text-b3 font-bold text-neutral-1000">
                     Semester {group.semester}
                   </span>

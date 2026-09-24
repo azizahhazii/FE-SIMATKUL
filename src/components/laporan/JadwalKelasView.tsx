@@ -1,34 +1,35 @@
-import UserId from '@solar-icons/react/users/UserId';
-import { mockDosenList, PERIODE_AKADEMIK_DEFAULT_ID } from '../../data/laporan';
+import { mockKelasList, PERIODE_AKADEMIK_DEFAULT_ID } from '../../data/laporan';
 import { useJadwalLaporan } from '../../hooks/laporan/UseJadwalLaporan';
-import { getJadwalDosen } from '../../services/laporan/jadwalDosenService';
-import type { DosenRingkas } from '../../types/laporan';
+import { getJadwalKelas } from '../../services/laporan/jadwalKelasService';
+import type { KelasRingkas } from '../../types/laporan';
 import { exportMatrixToExcel } from '../../utils/exportExcel';
+import UserId from '@solar-icons/react/users/UserId';
 import { JadwalMatrixTable } from './JadwalMatrixTable';
 import { LaporanToolbar } from './LaporanToolbar';
 
-export function JadwalDosenView() {
+export function JadwalKelasView() {
   const { data, loading, error, entityId, setEntityId } = useJadwalLaporan({
-    service: getJadwalDosen,
+    service: getJadwalKelas,
     periodeAkademikId: PERIODE_AKADEMIK_DEFAULT_ID,
   });
 
-  const dosenOptions = mockDosenList.map((dosen) => ({
-    id: dosen.id,
-    label: dosen.nama,
+  const kelasOptions = mockKelasList.map((kelas) => ({
+    id: kelas.id,
+    label: kelas.nama,
   }));
 
   const handleExport = () => {
-    exportMatrixToExcel(data, `Laporan_Jadwal_Dosen_${PERIODE_AKADEMIK_DEFAULT_ID}`);
+    exportMatrixToExcel(data, `Laporan_Jadwal_Kelas_${PERIODE_AKADEMIK_DEFAULT_ID}`);
   };
 
-  const renderDosenInfo = (dosen: DosenRingkas) => (
+  const renderKelasInfo = (kelas: KelasRingkas) => (
     <div className="flex flex-col items-center justify-center text-center">
+      {/* Nama kelas diperbesar menggunakan text-sm (14px) */}
       <div className="text-sm font-bold leading-snug text-neutral-1000">
-        {dosen.nama}
+        {kelas.nama}
       </div>
-      <div className="mt-1 text-xs leading-tight text-neutral-1000">
-        Beban Dosen: {dosen.bebanSks} SKS
+      <div className="mt-0.5 text-[11px] leading-tight text-neutral-600">
+        {kelas.prodi ?? kelas.keteranganSub}
       </div>
     </div>
   );
@@ -43,8 +44,8 @@ export function JadwalDosenView() {
 
       <div className="overflow-hidden rounded-3 border-2 border-neutral-500">
         <LaporanToolbar
-          defaultOptionLabel="Semua Dosen"
-          options={dosenOptions}
+          defaultOptionLabel="Semua Kelas"
+          options={kelasOptions}
           selectedId={entityId}
           onSelectChange={setEntityId}
           onExportExcel={handleExport}
@@ -52,10 +53,10 @@ export function JadwalDosenView() {
           selectLeftIcon={<UserId weight="BoldDuotone" size={24} />}
         />
 
-        <JadwalMatrixTable<DosenRingkas>
+        <JadwalMatrixTable<KelasRingkas>
           data={data}
-          labelKolomInfo="Nama Dosen"
-          renderInfo={renderDosenInfo}
+          labelKolomInfo="Nama Kelas"
+          renderInfo={renderKelasInfo}
           loading={loading}
         />
       </div>
