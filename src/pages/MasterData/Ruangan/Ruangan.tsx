@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 
 import { MasterDataToolbar } from "../../../components/master-data/MasterDataToolbar";
@@ -9,61 +9,139 @@ import {
 import { RowActions } from "../../../components/master-data/RowActions";
 import { ModalHapusData } from "../../../components/master-data/ModalHapusData";
 import { ModalFormRuangan, type RuanganFormData } from "./ModalFormRuangan";
+
 import type { MasterDataOutletContext } from "../../../layouts/MasterDataDetailLayout";
+
+import {
+  createRuangApi,
+  deleteRuangApi,
+  getRuangByKurikulumApi,
+  updateRuangApi,
+  type RuangApiItem,
+} from "../../../services/api";
 
 interface RuanganItem {
   id: string;
   nama: string;
 }
 
-const DUMMY_RUANGAN: RuanganItem[] = [
-  { id: "1", nama: "CU 205" },
-  { id: "2", nama: "CU 206" },
-  { id: "3", nama: "CU 207" },
-  { id: "4", nama: "CU 208" },
-  { id: "5", nama: "CU 209" },
-  { id: "6", nama: "CU 210" },
-  { id: "7", nama: "CU 211" },
-  { id: "8", nama: "CU 212" },
-];
+function mapApiToItem(item: RuangApiItem): RuanganItem {
+  return {
+    id: String(item.id),
+    nama: item.nama,
+  };
+}
 
 export function Ruangan() {
-  useOutletContext<MasterDataOutletContext>();
+  const { periode } = useOutletContext<MasterDataOutletContext>();
 
-  const [items, setItems] = useState<RuanganItem[]>(DUMMY_RUANGAN);
+  const [items, setItems] = useState<RuanganItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editItem, setEditItem] = useState<RuanganItem | null>(null);
   const [deleteItem, setDeleteItem] = useState<RuanganItem | null>(null);
 
+  /**
+   * Ambil data ruang berdasarkan kurikulum/periode
+   * yang sedang dibuka.
+   */
+  const loadRuangan = async () => {
+    setIsLoading(true);
+    setErrorMessage("");
+
+    try {
+      const data = await getRuangByKurikulumApi(periode.id);
+
+      setItems(data.map(mapApiToItem));
+    } catch (error) {
+      setItems([]);
+
+      setErrorMessage(
+        error instanceof Error ? error.message : "Gagal mengambil data ruang.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadRuangan();
+  }, [periode.id]);
+
+  /**
+   * Search hanya memfilter data yang sudah diterima.
+   * Tidak mengubah data asli di state.
+   */
   const filtered = items.filter((item) =>
     item.nama.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const handleAdd = (data: RuanganFormData) => {
-    setItems((prev) => [...prev, { id: String(Date.now()), ...data }]);
+  /**
+   * Tambah ruang.
+   */
+  const handleAdd = async (data: RuanganFormData) => {
+    setErrorMessage("");
+
+    const created = await createRuangApi(periode.id, {
+      nama: data.nama.trim(),
+    });
+
+    setItems((prev) => [...prev, mapApiToItem(created)]);
   };
 
-  const handleEdit = (data: RuanganFormData) => {
+  /**
+   * Edit ruang.
+   */
+  const handleEdit = async (data: RuanganFormData) => {
     if (!editItem) return;
+
+    setErrorMessage("");
+
+    const updated = await updateRuangApi(editItem.id, {
+      nama: data.nama.trim(),
+    });
+
     setItems((prev) =>
-      prev.map((item) => (item.id === editItem.id ? { ...item, ...data } : item)),
+      prev.map((item) =>
+        item.id === editItem.id ? mapApiToItem(updated) : item,
+      ),
     );
+
     setEditItem(null);
   };
 
-  const handleDelete = () => {
+  /**
+   * Hapus ruang.
+   */
+  const handleDelete = async () => {
     if (!deleteItem) return;
-    setItems((prev) => prev.filter((item) => item.id !== deleteItem.id));
-    setDeleteItem(null);
+
+    setErrorMessage("");
+
+    try {
+      await deleteRuangApi(deleteItem.id);
+
+      setItems((prev) => prev.filter((item) => item.id !== deleteItem.id));
+
+      setDeleteItem(null);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Gagal menghapus data ruang.",
+      );
+
+      setDeleteItem(null);
+    }
   };
 
   const columns: DataTableColumn<RuanganItem>[] = [
     {
       key: "nama",
       header: "Nama Ruang",
-      render: (item) => item.nama,
+      render: (item) => <div className="min-w-0 break-all">{item.nama}</div>,
     },
     {
       key: "aksi",
@@ -83,6 +161,7 @@ export function Ruangan() {
   return (
     <>
       <div className="overflow-hidden rounded-2 border border-neutral-600 bg-white">
+        {/* ================= TOOLBAR ================= */}
         <MasterDataToolbar
           searchPlaceholder="Cari nama ruang"
           searchQuery={searchQuery}
@@ -90,31 +169,61 @@ export function Ruangan() {
           actionLabel="Tambah Ruang"
           onAction={() => setIsAddOpen(true)}
         />
+
+        {/* ================= ERROR ================= */}
+        {errorMessage && (
+          <div className="border-b border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-b4 text-red-700">{errorMessage}</p>
+          </div>
+        )}
+
+        {/* ================= TABLE ================= */}
         <DataTable
           columns={columns}
           data={filtered}
           getRowKey={(item) => item.id}
-          emptyMessage="Data ruang tidak ditemukan."
+          emptyMessage={
+            isLoading ? "Memuat data ruang..." : "Data ruang tidak ditemukan."
+          }
         />
       </div>
 
+      {/* =====================================================
+          TAMBAH RUANG
+      ===================================================== */}
       <ModalFormRuangan
         mode="tambah"
         isOpen={isAddOpen}
         onClose={() => setIsAddOpen(false)}
         onSave={handleAdd}
       />
+
+      {/* =====================================================
+          EDIT RUANG
+      ===================================================== */}
       <ModalFormRuangan
         mode="edit"
         isOpen={Boolean(editItem)}
-        initialData={editItem ? { nama: editItem.nama } : undefined}
+        initialData={
+          editItem
+            ? {
+                nama: editItem.nama,
+              }
+            : undefined
+        }
         onClose={() => setEditItem(null)}
         onSave={handleEdit}
       />
+
+      {/* =====================================================
+          DELETE RUANG
+      ===================================================== */}
       <ModalHapusData
         isOpen={Boolean(deleteItem)}
         onClose={() => setDeleteItem(null)}
-        onConfirm={handleDelete}
+        onConfirm={() => {
+          void handleDelete();
+        }}
       />
     </>
   );

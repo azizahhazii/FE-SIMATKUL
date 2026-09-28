@@ -4,6 +4,7 @@ import AltArrowDown from "@solar-icons/react/arrows/AltArrowDown";
 export interface SelectOption {
   value: string;
   label: string;
+  disabled?: boolean;
 }
 
 export interface SelectFieldProps {
@@ -39,7 +40,9 @@ export function SelectField({
       {label && (
         <label
           htmlFor={selectId}
-          className={`text-b2 ${disabled ? "text-neutral-900" : "text-neutral-1000"}`}
+          className={`text-b2 ${
+            disabled ? "text-neutral-900" : "text-neutral-1000"
+          }`}
         >
           {label}
         </label>
@@ -84,8 +87,13 @@ export function SelectField({
               {placeholder}
             </option>
           )}
+
           {options.map((option) => (
-            <option key={option.value} value={option.value}>
+            <option
+              key={option.value}
+              value={option.value}
+              disabled={option.disabled}
+            >
               {option.label}
             </option>
           ))}
@@ -99,7 +107,9 @@ export function SelectField({
 
       {helperText && (
         <p
-          className={`text-b3 ${disabled ? "text-neutral-600" : "text-neutral-700"}`}
+          className={`text-b3 ${
+            disabled ? "text-neutral-600" : "text-neutral-700"
+          }`}
         >
           {helperText}
         </p>
