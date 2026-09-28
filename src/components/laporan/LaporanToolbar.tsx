@@ -1,7 +1,12 @@
-import type { ReactNode } from 'react';
-import FileDownload from '@solar-icons/react/files/FileDownload';
-import { Button } from 'assets-design-system';
-import { SelectField, type SelectOption } from '../master-data/SelectField';
+import type { ReactNode } from "react";
+
+import FileDownload from "@solar-icons/react/files/FileDownload";
+
+import { Button } from "assets-design-system";
+
+import { SelectField, type SelectOption } from "../master-data/SelectField";
+
+import { useAuth } from "../../context/AuthContext";
 
 export interface OptionEntitas {
   id: string;
@@ -18,10 +23,10 @@ export interface LaporanToolbarProps {
   selectLeftIcon?: ReactNode;
 }
 
-const ALL_VALUE = 'ALL';
+const ALL_VALUE = "ALL";
 
 export function LaporanToolbar({
-  defaultOptionLabel = 'Semua data',
+  defaultOptionLabel = "Semua data",
   options,
   selectedId,
   onSelectChange,
@@ -29,9 +34,17 @@ export function LaporanToolbar({
   isExportDisabled = false,
   selectLeftIcon,
 }: LaporanToolbarProps) {
+  const { user } = useAuth();
+
+  const isGuest = user?.role?.toLowerCase() === "guest";
+
+  const exportDisabled = isGuest || isExportDisabled;
 
   const selectOptions: SelectOption[] = [
-    { value: ALL_VALUE, label: defaultOptionLabel },
+    {
+      value: ALL_VALUE,
+      label: defaultOptionLabel,
+    },
     ...options.map((opt) => ({
       value: opt.id,
       label: opt.label,
@@ -39,12 +52,18 @@ export function LaporanToolbar({
   ];
 
   const handleChange = (value: string) => {
-
     onSelectChange(value === ALL_VALUE ? undefined : value);
+  };
+
+  const handleExport = () => {
+    if (exportDisabled) return;
+
+    onExportExcel();
   };
 
   return (
     <div className="flex flex-col gap-3 border-b border-neutral-600 bg-neutral-400 p-3 sm:flex-row sm:items-center sm:justify-between">
+      {/* ================= FILTER ================= */}
       <div className="w-full sm:w-80">
         <SelectField
           options={selectOptions}
@@ -55,18 +74,24 @@ export function LaporanToolbar({
         />
       </div>
 
+      {/* ================= EXPORT ================= */}
       <Button
         theme="primary"
         variant="solid"
         size="md"
-        onClick={onExportExcel}
-        disabled={isExportDisabled}
+        onClick={handleExport}
+        disabled={exportDisabled}
+        className={exportDisabled ? "!opacity-60" : ""}
+        title={isGuest ? "Ekspor Excel hanya tersedia untuk Admin" : undefined}
       >
         <div className="flex items-center gap-2">
           <FileDownload weight="BoldDuotone" size={20} />
-          <span>Ekspor to Excel</span>
+
+          <span>Ekspor ke Excel</span>
         </div>
       </Button>
     </div>
   );
 }
+
+export default LaporanToolbar;

@@ -1,12 +1,19 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+
 import { Login } from "../pages/Login/Login";
 import { DashboardLayout } from "../layouts/DashboardLayout";
 import { ProtectedRoute } from "../context/ProtectedRoute";
+import { useAuth } from "../context/AuthContext";
+
 import { MasterDataRoutes } from "./masterData";
 import { PenjadwalanRoutes } from "./penjadwalan";
 import { LaporanRoutes } from "./laporan";
 
 export function AppRoutes() {
+  const { user } = useAuth();
+
+  const isAdmin = user?.role?.toLowerCase() === "admin";
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
@@ -18,14 +25,42 @@ export function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Navigate to="/master-data" replace />} />
+        {/* ================= ROOT ================= */}
+        <Route
+          index
+          element={
+            <Navigate
+              to={isAdmin ? "/master-data" : "/laporan/dosen"}
+              replace
+            />
+          }
+        />
 
-        <Route path="master-data/*" element={<MasterDataRoutes />} />
+        {/* ================= MASTER DATA ================= */}
+        <Route
+          path="master-data/*"
+          element={
+            <ProtectedRoute roles={["admin"]}>
+              <MasterDataRoutes />
+            </ProtectedRoute>
+          }
+        />
 
-        <Route path="penjadwalan/*" element={<PenjadwalanRoutes />} />
+        {/* ================= PENJADWALAN ================= */}
+        <Route
+          path="penjadwalan/*"
+          element={
+            <ProtectedRoute roles={["admin"]}>
+              <PenjadwalanRoutes />
+            </ProtectedRoute>
+          }
+        />
 
+        {/* ================= HASIL ================= */}
         <Route path="laporan/*" element={<LaporanRoutes />} />
       </Route>
     </Routes>
   );
 }
+
+export default AppRoutes;

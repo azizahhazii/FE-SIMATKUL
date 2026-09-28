@@ -4,10 +4,6 @@ import { ApiError } from "../lib/axios";
 import { loginApi, type AuthUser } from "../services/api";
 
 interface StoredUser extends AuthUser {
-  /**
-   * DashboardLayout kamu menggunakan `name`.
-   * Kita isi dengan username dari backend.
-   */
   name: string;
 }
 
@@ -18,21 +14,14 @@ interface AuthContextType {
   error: string | null;
 
   login: (username: string, password: string) => Promise<void>;
+  loginAsGuest: () => void;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-/**
- * Ambil user yang tersimpan dari localStorage.
- *
- * Format baru:
- * {
- *   username: "admin",
- *   role: "admin",
- *   name: "admin"
- * }
- */
+const GUEST_SESSION_KEY = "simatkul_guest";
+
 function getStoredUser(): StoredUser | null {
   const savedUser = localStorage.getItem("simatkul_user");
 
@@ -54,23 +43,11 @@ function getStoredUser(): StoredUser | null {
       name: parsed.name ?? parsed.username,
     };
   } catch {
-    /**
-     * Format lama dari dummy auth:
-     * simatkul_user = "admin"
-     *
-     * Karena bukan JSON, hapus supaya tidak mengganggu
-     * autentikasi baru.
-     */
     localStorage.removeItem("simatkul_user");
     return null;
   }
 }
 
-/**
- * Ambil token yang valid dari localStorage.
- *
- * Token lama "dummy-token" langsung dibersihkan.
- */
 function getStoredToken(): string | null {
   const token = localStorage.getItem("simatkul_token");
 
@@ -85,20 +62,20 @@ function getStoredToken(): string | null {
   return token;
 }
 
+function getGuestSession(): boolean {
+  return localStorage.getItem(GUEST_SESSION_KEY) === "true";
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<StoredUser | null>(getStoredUser);
 
-  const [isAuthenticated, setIsAuthenticated] = useState(() =>
-    Boolean(getStoredToken()),
-  );
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return Boolean(getStoredToken()) || getGuestSession();
+  });
 
   const [isLoading, setIsLoading] = useState(false);
-
   const [error, setError] = useState<string | null>(null);
 
-  /**
-   * Login menggunakan endpoint backend.
-   */
   async function login(username: string, password: string) {
     setIsLoading(true);
     setError(null);
@@ -109,50 +86,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
       });
 
-      /**
-       * Data user dari backend:
-       * {
-       *   username: "...",
-       *   role: "admin"
-       * }
-       *
-       * DashboardLayout yang sudah ada membutuhkan `name`,
-       * jadi kita tambahkan name = username.
-       */
       const storedUser: StoredUser = {
         username: response.user.username,
         role: response.user.role,
         name: response.user.username,
       };
 
-      /**
-       * Simpan JWT dari backend.
-       */
-      localStorage.setItem("simatkul_token", response.token);
+      localStorage.removeItem(GUEST_SESSION_KEY);
 
-      /**
-       * Simpan data user sebagai JSON.
-       */
+      localStorage.setItem("simatkul_token", response.token);
       localStorage.setItem("simatkul_user", JSON.stringify(storedUser));
 
-      /**
-       * Update state React.
-       */
       setUser(storedUser);
       setIsAuthenticated(true);
       setError(null);
     } catch (err) {
-      /**
-       * Error dari backend:
-       *
-       * 400:
-       * Field Username Cannot Be Empty
-       *
-       * 401:
-       * Invalid username or password
-       *
-       * dsb.
-       */
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
@@ -161,9 +109,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         );
       }
 
-      /**
-       * Pastikan state login tetap false kalau request gagal.
-       */
       setIsAuthenticated(false);
       setUser(null);
     } finally {
@@ -172,14 +117,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   /**
-   * Logout lokal.
+   * Guest sementara dibuat sebagai session lokal FE.
    *
-   * Backend tidak menyediakan endpoint logout karena JWT
-   * cukup dihapus dari client.
+   * Tidak memakai JWT admin.
    */
+  function loginAsGuest() {
+    const guestUser: StoredUser = {
+      username: "guest",
+      role: "guest",
+      name: "Guest",
+    };
+
+    localStorage.removeItem("simatkul_token");
+
+    localStorage.setItem("simatkul_user", JSON.stringify(guestUser));
+
+    localStorage.setItem(GUEST_SESSION_KEY, "true");
+
+    setUser(guestUser);
+    setIsAuthenticated(true);
+    setError(null);
+  }
+
   function logout() {
     localStorage.removeItem("simatkul_token");
     localStorage.removeItem("simatkul_user");
+    localStorage.removeItem(GUEST_SESSION_KEY);
 
     setUser(null);
     setIsAuthenticated(false);
@@ -194,6 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         error,
         login,
+        loginAsGuest,
         logout,
       }}
     >
