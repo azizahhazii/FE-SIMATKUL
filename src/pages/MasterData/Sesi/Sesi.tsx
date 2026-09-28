@@ -63,24 +63,6 @@ function normalizeTimeForApi(value: string): string {
 }
 
 /**
- * Ambil nilai waktu dari timestamp/API untuk kebutuhan sorting.
- *
- * Contoh:
- * "2026-01-01 07:15:00" → "07:15"
- */
-function getTimeForSort(value: string): string {
-  if (!value) return "";
-
-  const match = value.match(/(?:T|\s)(\d{2}):(\d{2})(?::\d{2})?/);
-
-  if (!match) {
-    return value;
-  }
-
-  return `${match[1]}:${match[2]}`;
-}
-
-/**
  * Mapping data dari backend ke bentuk yang digunakan UI.
  *
  * Backend sekarang hanya membutuhkan:
