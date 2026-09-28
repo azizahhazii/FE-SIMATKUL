@@ -4,10 +4,7 @@ import { DashboardLayout } from "../layouts/DashboardLayout";
 import { ProtectedRoute } from "../context/ProtectedRoute";
 import { MasterDataRoutes } from "./masterData";
 import { PenjadwalanRoutes } from "./penjadwalan";
-
-function Placeholder({ label }: { label: string }) {
-  return <p className="text-b1">Halaman {label} (nnt dl sbr)</p>;
-}
+import { LaporanRoutes } from "./laporan";
 
 export function AppRoutes() {
   return (
@@ -27,7 +24,7 @@ export function AppRoutes() {
 
         <Route path="penjadwalan/*" element={<PenjadwalanRoutes />} />
 
-        <Route path="laporan/*" element={<Placeholder label="Hasil" />} />
+        <Route path="laporan/*" element={<LaporanRoutes />} />
       </Route>
     </Routes>
   );
