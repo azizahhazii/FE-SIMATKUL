@@ -76,7 +76,6 @@ function groupKelas(items: KelasApiItem[]): SemesterGroup[] {
     const groupId = `${prodi}-${semester}`;
 
     const existing = groups.get(groupId);
-
     const kelasItem = mapApiToItem(item);
 
     if (existing) {
@@ -110,25 +109,18 @@ export function Kelas() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [isLoading, setIsLoading] = useState(true);
-
   const [errorMessage, setErrorMessage] = useState("");
 
   const [isAddOpen, setIsAddOpen] = useState(false);
-
   const [editGroup, setEditGroup] = useState<SemesterGroup | null>(null);
-
   const [deleteGroup, setDeleteGroup] = useState<SemesterGroup | null>(null);
 
-  /**
-   * Load data kelas berdasarkan kurikulum/periode.
-   */
   const loadKelas = async () => {
     setIsLoading(true);
     setErrorMessage("");
 
     try {
       const data = await getKelasByKurikulumApi(periode.id);
-
       setGroups(groupKelas(data));
     } catch (error) {
       setGroups([]);
@@ -145,11 +137,6 @@ export function Kelas() {
     void loadKelas();
   }, [periode.id]);
 
-  /**
-   * Filter berdasarkan Prodi + search.
-   *
-   * Data asli di state tidak diubah.
-   */
   const filtered = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
@@ -171,10 +158,8 @@ export function Kelas() {
   /**
    * ADD
    *
-   * Frontend tidak generate nama kelas sendiri.
-   *
    * FE hanya mengirim konfigurasi.
-   * BE yang menentukan kelas A/B/AB/A1/A2/dst.
+   * BE yang generate nama dan kode kelas.
    */
   const handleAdd = async (data: KelasFormData) => {
     setErrorMessage("");
@@ -183,33 +168,30 @@ export function Kelas() {
       throw new Error("Semester harus dipilih.");
     }
 
+    const jumlahTeori = Number(data.jumlahTeori);
+    const jumlahPraktikum = Number(data.jumlahPraktikum);
+
+    if (jumlahTeori < 1 || jumlahPraktikum < 1) {
+      throw new Error(
+        "Jumlah kelas teori dan praktikum harus dipilih terlebih dahulu.",
+      );
+    }
+
     await createKelasApi(periode.id, {
       prodi: data.prodi,
       semester: Number(data.semester),
-
-      kelas_teori: data.jumlahTeori ? Number(data.jumlahTeori) : 0,
-
-      kelas_praktikum: data.jumlahPraktikum ? Number(data.jumlahPraktikum) : 0,
+      kelas_teori: jumlahTeori,
+      kelas_praktikum: jumlahPraktikum,
     });
 
-    /**
-     * Ambil ulang dari backend supaya yang tampil
-     * benar-benar hasil generate BE.
-     */
     await loadKelas();
   };
 
   /**
    * EDIT GROUP
    *
-   * Endpoint BE PUT hanya mengubah SATU kelas.
-   *
-   * Karena UI saat ini memiliki tombol Edit di header
-   * semester group, maka semua kelas yang ada di group
-   * diperbarui satu per satu.
-   *
-   * Jumlah kelas tidak diubah karena endpoint PUT BE
-   * memang tidak menyediakan generate ulang jumlah kelas.
+   * BE terbaru memperbarui group kelas berdasarkan:
+   * from_semester, to_semester, kelas_teori, kelas_praktikum.
    */
   const handleEdit = async (data: KelasFormData) => {
     if (!editGroup) return;
@@ -218,14 +200,24 @@ export function Kelas() {
       throw new Error("Semester harus dipilih.");
     }
 
+    const jumlahTeori = Number(data.jumlahTeori);
+    const jumlahPraktikum = Number(data.jumlahPraktikum);
+
+    if (jumlahTeori < 1 || jumlahPraktikum < 1) {
+      throw new Error(
+        "Jumlah kelas teori dan praktikum harus dipilih terlebih dahulu.",
+      );
+    }
+
     setErrorMessage("");
 
-    for (const item of editGroup.kelas) {
-      await updateKelasApi(item.id, {
-        prodi: data.prodi,
-        semester: Number(data.semester),
-      });
-    }
+    await updateKelasApi(periode.id, {
+      prodi: data.prodi,
+      from_semester: Number(editGroup.semester),
+      to_semester: Number(data.semester),
+      kelas_teori: jumlahTeori,
+      kelas_praktikum: jumlahPraktikum,
+    });
 
     await loadKelas();
     setEditGroup(null);
@@ -234,10 +226,8 @@ export function Kelas() {
   /**
    * DELETE GROUP
    *
-   * BE hanya punya DELETE /kelas/:id.
-   *
-   * Jadi seluruh kelas yang berada dalam satu semester group
-   * dihapus satu per satu.
+   * BE terbaru menghapus seluruh kelas pada semester tertentu
+   * dalam satu request berdasarkan kurikulumId + semester.
    */
   const handleDelete = async () => {
     if (!deleteGroup) return;
@@ -245,18 +235,11 @@ export function Kelas() {
     setErrorMessage("");
 
     try {
-      for (const item of deleteGroup.kelas) {
-        await deleteKelasApi(item.id);
-      }
+      await deleteKelasApi(periode.id, Number(deleteGroup.semester));
 
       await loadKelas();
-
       setDeleteGroup(null);
     } catch (error) {
-      /**
-       * Reload lagi agar UI kembali mencerminkan kondisi
-       * database kalau proses delete berhenti di tengah.
-       */
       await loadKelas();
 
       setErrorMessage(
@@ -270,17 +253,11 @@ export function Kelas() {
   return (
     <>
       <div className="flex flex-col gap-6">
-        {/* ===================================================
-            PRODI FILTER
-        =================================================== */}
         <ProdiFilterCards
           selected={selectedProdi}
           onSelect={setSelectedProdi}
         />
 
-        {/* ===================================================
-            TABLE CARD
-        =================================================== */}
         <div className="overflow-hidden rounded-2 border border-neutral-600 bg-white">
           <MasterDataToolbar
             searchPlaceholder="Cari kelas"
@@ -291,7 +268,6 @@ export function Kelas() {
             showFilter
           />
 
-          {/* Error */}
           {errorMessage && (
             <div className="border-b border-red-200 bg-red-50 px-4 py-3">
               <p className="text-b4 text-red-700">{errorMessage}</p>
@@ -305,10 +281,7 @@ export function Kelas() {
           ) : filtered.length > 0 ? (
             filtered.map((group) => (
               <div key={group.id} className="flex flex-col">
-                {/* =========================================
-                    SEMESTER HEADER
-                ========================================= */}
-                <div className="flex items-center justify-between border-b border-neutral-600 bg-white px-3 py-2">
+                <div className="flex items-center justify-between border-b border-neutral-600 bg-neutral-400 px-3 py-2">
                   <span className="text-b3 font-bold text-neutral-1000">
                     Semester {group.semester}
                   </span>
@@ -320,9 +293,6 @@ export function Kelas() {
                   />
                 </div>
 
-                {/* =========================================
-                    KELAS TABLE
-                ========================================= */}
                 <DataTable
                   columns={KELAS_COLUMNS}
                   data={group.kelas}
@@ -339,9 +309,6 @@ export function Kelas() {
         </div>
       </div>
 
-      {/* =====================================================
-          TAMBAH KELAS
-      ===================================================== */}
       <ModalFormKelas
         mode="tambah"
         isOpen={isAddOpen}
@@ -349,9 +316,6 @@ export function Kelas() {
         onSave={handleAdd}
       />
 
-      {/* =====================================================
-          EDIT KELAS / SEMESTER GROUP
-      ===================================================== */}
       <ModalFormKelas
         mode="edit"
         isOpen={Boolean(editGroup)}
@@ -361,11 +325,6 @@ export function Kelas() {
             ? {
                 prodi: editGroup.prodi,
                 semester: editGroup.semester,
-
-                /**
-                 * Jumlah tidak dipakai saat edit.
-                 * PUT BE hanya mengubah class existing.
-                 */
                 jumlahTeori: "",
                 jumlahPraktikum: "",
               }
@@ -375,9 +334,6 @@ export function Kelas() {
         onSave={handleEdit}
       />
 
-      {/* =====================================================
-          DELETE
-      ===================================================== */}
       <ModalHapusData
         isOpen={Boolean(deleteGroup)}
         onClose={() => setDeleteGroup(null)}
