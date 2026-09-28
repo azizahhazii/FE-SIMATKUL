@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
+
 import { Input } from "assets-design-system";
 import Magnifer from "@solar-icons/react/search/Magnifer";
 
@@ -8,6 +9,7 @@ import {
   type HeatmapRow,
   type Jadwal,
 } from "../../types/penjadwalan";
+
 import { slotKey } from "../../utils/penjadwalan";
 
 const LABEL_WIDTH = "w-[360px] min-w-[360px]";
@@ -35,10 +37,10 @@ export function HeatmapGrid({
   rows,
   searchPlaceholder,
   emptyMessage,
-  // 62px header + 3 x 61px row = 245px
   maxHeight = "max-h-[245px]",
 }: HeatmapGridProps) {
   const [searchQuery, setSearchQuery] = useState("");
+
   const [hoveredSlot, setHoveredSlot] = useState<HoveredSlot | null>(null);
 
   const filtered = rows.filter((row) =>
@@ -46,7 +48,7 @@ export function HeatmapGrid({
   );
 
   const handleMouseEnter = (
-    event: React.MouseEvent<HTMLDivElement>,
+    event: MouseEvent<HTMLDivElement>,
     jadwal: Jadwal[],
   ) => {
     if (jadwal.length === 0) return;
@@ -58,7 +60,7 @@ export function HeatmapGrid({
     });
   };
 
-  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseMove = (event: MouseEvent<HTMLDivElement>) => {
     setHoveredSlot((current) => {
       if (!current) return null;
 
@@ -79,20 +81,11 @@ export function HeatmapGrid({
       className="relative border-b border-neutral-600 last:border-b-0"
       onMouseLeave={handleMouseLeave}
     >
-      {/* =========================================================
-          SATU SCROLL CONTAINER UNTUK HEADER + BODY
-          
-          Ini yang memperbaiki garis vertikal agar tidak miring.
-          Header dan body sekarang menggunakan lebar yang sama persis.
-      ========================================================= */}
       <div
         className={`${maxHeight} overflow-y-auto`}
         onScroll={handleMouseLeave}
       >
-        {/* =======================================================
-            HEADER
-            Sticky supaya tetap terlihat ketika section di-scroll.
-        ======================================================= */}
+        {/* ================= HEADER ================= */}
         <div className="sticky top-0 z-20 flex h-[62px] items-stretch bg-neutral-400">
           {/* Search */}
           <div
@@ -135,9 +128,7 @@ export function HeatmapGrid({
           </div>
         </div>
 
-        {/* =======================================================
-            BODY
-        ======================================================= */}
+        {/* ================= BODY ================= */}
         {filtered.length > 0 ? (
           filtered.map((row) => (
             <div
@@ -149,7 +140,7 @@ export function HeatmapGrid({
                 className={`${LABEL_WIDTH} flex shrink-0 flex-col items-center justify-center border-r border-neutral-600 px-3 text-center`}
               >
                 <div
-                  className={`w-full truncate text-b5 ${
+                  className={`w-full truncate text-b3 ${
                     row.adaBentrok
                       ? "font-bold text-[#E5484D]"
                       : "text-neutral-1000"
@@ -180,9 +171,11 @@ export function HeatmapGrid({
                       const key = slotKey(hari, sesi);
 
                       const jumlah = row.slots[key] ?? 0;
+
                       const slotJadwal = row.slotJadwal[key] ?? [];
 
                       const kosong = jumlah === 0;
+
                       const bentrok = jumlah > 1;
 
                       const warna = kosong
@@ -197,12 +190,10 @@ export function HeatmapGrid({
                           className="flex min-w-0 flex-1 items-center justify-center"
                         >
                           {kosong ? (
-                            /* Slot kosong hanya indikator */
                             <div className={`size-5 rounded-[4px] ${warna}`} />
                           ) : (
-                            /* Slot terisi hanya bisa di-hover */
                             <div
-                              className={`size-5 rounded-[4px] ${warna} cursor-help`}
+                              className={`size-5 cursor-help rounded-[4px] ${warna}`}
                               onMouseEnter={(event) =>
                                 handleMouseEnter(event, slotJadwal)
                               }
@@ -225,59 +216,55 @@ export function HeatmapGrid({
         )}
       </div>
 
-      {/* =========================================================
-          TOOLTIP
-          
-          Fixed → tidak ikut menambah tinggi layout.
-      ========================================================= */}
+      {/* ================= TOOLTIP ================= */}
       {hoveredSlot && (
         <div
-          className="pointer-events-none fixed z-[9999] w-[320px] rounded-[4px] bg-[#1F1F1F] px-4 py-3 shadow-lg"
+          className="pointer-events-none fixed z-[9999] max-w-[225px] rounded-[4px] bg-[#D16E05] px-3 py-2 shadow-md"
           style={{
-            left: Math.min(hoveredSlot.x + 14, window.innerWidth - 340),
-            top: Math.min(hoveredSlot.y + 14, window.innerHeight - 175),
+            left: Math.min(hoveredSlot.x + 12, window.innerWidth - 240),
+            top: Math.min(hoveredSlot.y + 12, window.innerHeight - 95),
           }}
         >
-          {hoveredSlot.jadwal.map((item, index) => (
-            <div
-              key={item.id}
-              className={`relative pl-4 ${
-                index > 0 ? "mt-3 border-t border-neutral-700 pt-3" : ""
-              }`}
-            >
-              {/* Garis kiri dibuat sebagai elemen sendiri supaya lurus */}
-              <span
-                className="absolute bottom-0 left-0 top-0 w-[3px] rounded-full bg-[#4A4A4A]"
-                aria-hidden="true"
-              />
+          {hoveredSlot.jadwal.length === 1 ? (
+            <>
+              <div className="truncate text-[12px] font-bold leading-[15px] text-white">
+                {hoveredSlot.jadwal[0].namaMataKuliah}
+              </div>
 
-              {hoveredSlot.jadwal.length > 1 && (
-                <div className="mb-1 text-[10px] font-semibold text-[#FF8A8A]">
-                  Jadwal Bentrok
+              <div className="mt-0.5 truncate text-[10px] leading-[13px] text-white/90">
+                {hoveredSlot.jadwal[0].kelas}
+                {" · "}
+                {hoveredSlot.jadwal[0].ruang}
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <div className="text-[10px] font-bold uppercase tracking-wide text-white">
+                Jadwal Bentrok
+              </div>
+
+              {hoveredSlot.jadwal.map((item) => (
+                <div
+                  key={item.id}
+                  className="border-t border-white/20 pt-1.5 first:border-t-0 first:pt-0"
+                >
+                  <div className="truncate text-[11px] font-bold leading-[14px] text-white">
+                    {item.namaMataKuliah}
+                  </div>
+
+                  <div className="text-[10px] leading-[13px] text-white/90">
+                    {item.kelas}
+                    {" · "}
+                    {item.ruang}
+                  </div>
                 </div>
-              )}
-
-              {/* Mata Kuliah */}
-              <div className="text-b4 font-bold leading-5 text-white">
-                {item.namaMataKuliah}
-              </div>
-
-              {/* Dosen */}
-              <div className="text-b4 leading-5 text-white">{item.dosen}</div>
-
-              {/* Kelas + Ruang */}
-              <div className="text-b4 leading-5 text-white">
-                {item.kelas} · {item.ruang}
-              </div>
-
-              {/* Hari + Sesi */}
-              <div className="text-b4 leading-5 text-white">
-                {item.hari} · Sesi {item.sesi}
-              </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>
   );
 }
+
+export default HeatmapGrid;

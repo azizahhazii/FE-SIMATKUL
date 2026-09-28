@@ -453,26 +453,16 @@ export interface KelasApiItem {
 export interface KelasCreatePayload {
   prodi: string;
   semester: number;
-
-  /**
-   * FE tetap mengirim dua nilai ini sesuai form.
-   * BE yang menentukan hasil generate kelas.
-   */
-  kelas_teori?: number;
-  kelas_praktikum?: number;
-
-  /**
-   * Alternatif jumlah kelas yang didukung BE.
-   * Nilainya 1 - 4.
-   */
-  jumlah_kelas?: number;
+  kelas_teori: number;
+  kelas_praktikum: number;
 }
 
 export interface KelasUpdatePayload {
   prodi?: string;
-  semester?: number;
-  kelas?: string;
-  kode_kelas?: string;
+  from_semester: number;
+  to_semester: number;
+  kelas_teori: number;
+  kelas_praktikum: number;
 }
 
 /**
@@ -496,12 +486,10 @@ export async function getKelasByKurikulumApi(
 /**
  * Tambah kelas.
  *
- * BE akan generate kelas secara otomatis berdasarkan:
- * - kelas_teori
- * - kelas_praktikum
- * - jumlah_kelas
+ * BE akan generate nama dan kode kelas berdasarkan konfigurasi
+ * prodi, semester, kelas_teori, dan kelas_praktikum.
  *
- * Response `data` dari BE bisa berupa satu object atau array.
+ * POST /api/master-data/kelas/:kurikulumId
  */
 export async function createKelasApi(
   kurikulumId: string | number,
@@ -509,28 +497,31 @@ export async function createKelasApi(
 ): Promise<KelasApiItem[]> {
   const response = await apiRequest<{
     message: string;
-    data: KelasApiItem | KelasApiItem[];
+    data: KelasApiItem[];
   }>(`/api/master-data/kelas/${kurikulumId}`, {
     method: "POST",
     body: JSON.stringify(payload),
   });
 
-  return Array.isArray(response.data) ? response.data : [response.data];
+  return response.data;
 }
 
 /**
- * Edit satu kelas.
+ * Edit satu group kelas berdasarkan semester lama/baru.
  *
- * PUT /api/master-data/kelas/:id
+ * BE menghapus kelas pada from_semester lalu generate ulang
+ * kelas berdasarkan to_semester, kelas_teori, dan kelas_praktikum.
+ *
+ * PUT /api/master-data/kelas/:kurikulumId
  */
 export async function updateKelasApi(
-  id: string | number,
+  kurikulumId: string | number,
   payload: KelasUpdatePayload,
-): Promise<KelasApiItem> {
+): Promise<KelasApiItem[]> {
   const response = await apiRequest<{
     message: string;
-    data: KelasApiItem;
-  }>(`/api/master-data/kelas/${id}`, {
+    data: KelasApiItem[];
+  }>(`/api/master-data/kelas/${kurikulumId}`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
@@ -539,36 +530,36 @@ export async function updateKelasApi(
 }
 
 /**
- * Hapus satu kelas.
+ * Hapus seluruh kelas pada semester tertentu dalam satu kurikulum.
  *
- * DELETE /api/master-data/kelas/:id
+ * DELETE /api/master-data/kelas/:kurikulumId
+ * Body: { semester }
  */
 export async function deleteKelasApi(
-  id: string | number,
-): Promise<KelasApiItem> {
+  kurikulumId: string | number,
+  semester: number,
+): Promise<KelasApiItem[]> {
   const response = await apiRequest<{
     message: string;
-    data: KelasApiItem;
-  }>(`/api/master-data/kelas/${id}`, {
+    data: KelasApiItem[];
+  }>(`/api/master-data/kelas/${kurikulumId}`, {
     method: "DELETE",
+    body: JSON.stringify({ semester }),
   });
 
   return response.data;
 }
-
 // ============================================================
 // SESI
 // ============================================================
 
 export interface SesiApiItem {
   id: number;
-  nama: number;
   jam_mulai: string;
   jam_akhir: string;
 }
 
 export interface SesiPayload {
-  nama: number;
   jam_mulai: string;
   jam_akhir: string;
 }
@@ -633,8 +624,6 @@ export async function updateSesiApi(
 
 /**
  * Hapus sesi.
- *
- * Backend juga menghapus relasi kurikulum-sesi.
  */
 export async function deleteSesiApi(id: string | number): Promise<SesiApiItem> {
   const response = await apiRequest<{

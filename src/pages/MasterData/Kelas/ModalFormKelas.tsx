@@ -23,19 +23,8 @@ interface ModalFormKelasProps {
   isOpen: boolean;
   mode: "tambah" | "edit";
   initialData?: KelasFormData;
-
-  /**
-   * Kode kelas pertama pada group.
-   * Dipakai sebagai konteks judul modal saat edit.
-   */
   namaKelas?: string;
-
   onClose: () => void;
-
-  /**
-   * Bisa synchronous maupun asynchronous karena
-   * proses simpan sekarang terhubung ke backend.
-   */
   onSave: (data: KelasFormData) => void | Promise<void>;
 }
 
@@ -55,9 +44,7 @@ export function ModalFormKelas({
   onSave,
 }: ModalFormKelasProps) {
   const [form, setForm] = useState<KelasFormData>(EMPTY_FORM);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -78,33 +65,23 @@ export function ModalFormKelas({
       return;
     }
 
-    /**
-     * Pada mode tambah:
-     *
-     * minimal salah satu konfigurasi jumlah harus
-     * menghasilkan nilai > 0.
-     *
-     * Validasi detail tetap dilakukan BE.
-     */
-    if (mode === "tambah") {
-      const jumlahTeori = Number(form.jumlahTeori || 0);
+    const jumlahTeori = Number(form.jumlahTeori);
+    const jumlahPraktikum = Number(form.jumlahPraktikum);
 
-      const jumlahPraktikum = Number(form.jumlahPraktikum || 0);
+    if (jumlahTeori < 1) {
+      setErrorMessage("Jumlah kelas teori harus dipilih.");
+      return;
+    }
 
-      if (jumlahTeori <= 0 && jumlahPraktikum <= 0) {
-        setErrorMessage("Jumlah kelas teori atau praktikum harus dipilih.");
-        return;
-      }
+    if (jumlahPraktikum < 1) {
+      setErrorMessage("Jumlah kelas praktikum harus dipilih.");
+      return;
     }
 
     setIsSubmitting(true);
 
     try {
       await onSave(form);
-
-      /**
-       * Tutup modal setelah API berhasil.
-       */
       onClose();
     } catch (error) {
       setErrorMessage(
@@ -117,13 +94,22 @@ export function ModalFormKelas({
 
   const isEdit = mode === "edit";
 
+  /**
+   * BE saat ini mendukung jumlah kelas 1 - 4.
+   * Filter dilakukan di sini supaya tidak mengubah component
+   * formOptions yang mungkin dipakai halaman lain.
+   */
+  const kelasOptions = JUMLAH_KELAS_OPTIONS.filter(
+    (option) => Number(option.value) <= 4,
+  );
+
   return (
     <ModalForm
       isOpen={isOpen}
       title={isEdit ? `Edit Kelas ${namaKelas ?? ""}` : "Tambah Kelas"}
       description={
         isEdit
-          ? "Ubah program studi atau semester kelas pada periode ini"
+          ? "Ubah program studi, semester, dan jumlah kelas pada periode ini"
           : "Tambah data kelas untuk periode ini"
       }
       submitLabel={isEdit ? "Simpan Perubahan" : "Tambah Kelas"}
@@ -132,18 +118,12 @@ export function ModalFormKelas({
         void handleSubmit();
       }}
     >
-      {/* =====================================================
-          ERROR
-      ===================================================== */}
       {errorMessage && (
         <div className="rounded-2 border border-red-200 bg-red-50 px-3 py-2.5">
           <p className="text-b4 text-red-700">{errorMessage}</p>
         </div>
       )}
 
-      {/* =====================================================
-          PROGRAM STUDI
-      ===================================================== */}
       <div className="flex flex-col gap-2">
         <span className="text-b2 text-neutral-1000">Program Studi</span>
 
@@ -159,9 +139,6 @@ export function ModalFormKelas({
         />
       </div>
 
-      {/* =====================================================
-          SEMESTER
-      ===================================================== */}
       <SelectField
         label="Semester"
         placeholder="pilih semester"
@@ -173,52 +150,37 @@ export function ModalFormKelas({
             semester,
           }))
         }
+        disabled={isSubmitting}
       />
 
-      {/* =====================================================
-          JUMLAH KELAS
-          
-          Hanya digunakan saat TAMBAH.
-          
-          Saat EDIT, endpoint BE tidak mendukung perubahan
-          jumlah kelas / generate ulang kelas.
-      ===================================================== */}
       <div className="grid grid-cols-2 gap-4">
-        <div className={isEdit ? "opacity-50" : ""}>
-          <SelectField
-            label="Jumlah Kelas Teori"
-            placeholder={
-              isEdit ? "Tidak tersedia saat edit" : "pilih jumlah kelas"
-            }
-            options={JUMLAH_KELAS_OPTIONS}
-            value={form.jumlahTeori}
-            onChange={(jumlahTeori) =>
-              setForm((prev) => ({
-                ...prev,
-                jumlahTeori,
-              }))
-            }
-            disabled={isEdit || isSubmitting}
-          />
-        </div>
+        <SelectField
+          label="Jumlah Kelas Teori"
+          placeholder="pilih jumlah kelas"
+          options={kelasOptions}
+          value={form.jumlahTeori}
+          onChange={(jumlahTeori) =>
+            setForm((prev) => ({
+              ...prev,
+              jumlahTeori,
+            }))
+          }
+          disabled={isSubmitting}
+        />
 
-        <div className={isEdit ? "opacity-50" : ""}>
-          <SelectField
-            label="Jumlah Kelas Praktikum"
-            placeholder={
-              isEdit ? "Tidak tersedia saat edit" : "pilih jumlah kelas"
-            }
-            options={JUMLAH_KELAS_OPTIONS}
-            value={form.jumlahPraktikum}
-            onChange={(jumlahPraktikum) =>
-              setForm((prev) => ({
-                ...prev,
-                jumlahPraktikum,
-              }))
-            }
-            disabled={isEdit || isSubmitting}
-          />
-        </div>
+        <SelectField
+          label="Jumlah Kelas Praktikum"
+          placeholder="pilih jumlah kelas"
+          options={kelasOptions}
+          value={form.jumlahPraktikum}
+          onChange={(jumlahPraktikum) =>
+            setForm((prev) => ({
+              ...prev,
+              jumlahPraktikum,
+            }))
+          }
+          disabled={isSubmitting}
+        />
       </div>
     </ModalForm>
   );

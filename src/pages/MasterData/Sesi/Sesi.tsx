@@ -22,7 +22,6 @@ import {
 
 interface SesiItem {
   id: string;
-  nama: number;
   nomor: string;
   jamMulai: string;
   jamBerakhir: string;
@@ -63,14 +62,41 @@ function normalizeTimeForApi(value: string): string {
     .replace(".", ":");
 }
 
+/**
+ * Mapping data dari backend ke bentuk yang digunakan UI.
+ *
+ * Backend sekarang hanya membutuhkan:
+ * - id
+ * - jam_mulai
+ * - jam_akhir
+ *
+ * Nomor sesi dibuat oleh FE berdasarkan urutan waktu.
+ */
 function mapApiToItem(item: SesiApiItem): SesiItem {
   return {
     id: String(item.id),
-    nama: Number(item.nama),
-    nomor: `Sesi ${item.nama}`,
+    nomor: "",
     jamMulai: formatApiTime(item.jam_mulai),
     jamBerakhir: formatApiTime(item.jam_akhir),
   };
+}
+
+/**
+ * Urutkan sesi berdasarkan jam mulai lalu beri nomor sesi
+ * berdasarkan urutan data.
+ */
+function normalizeItems(items: SesiItem[]): SesiItem[] {
+  return [...items]
+    .sort((a, b) => {
+      const timeA = normalizeTimeForApi(a.jamMulai);
+      const timeB = normalizeTimeForApi(b.jamMulai);
+
+      return timeA.localeCompare(timeB);
+    })
+    .map((item, index) => ({
+      ...item,
+      nomor: `Sesi ${index + 1}`,
+    }));
 }
 
 export function Sesi() {
@@ -87,32 +113,43 @@ export function Sesi() {
   const [deleteItem, setDeleteItem] = useState<SesiItem | null>(null);
 
   /**
-   * Ambil sesi berdasarkan kurikulum/periode yang
-   * sedang dibuka.
+   * Ambil sesi berdasarkan kurikulum/periode yang sedang dibuka.
    */
-  const loadSesi = async () => {
-    setIsLoading(true);
-    setErrorMessage("");
-
-    try {
-      const data = await getSesiByKurikulumApi(periode.id);
-
-      const mapped = data.map(mapApiToItem).sort((a, b) => a.nama - b.nama);
-
-      setItems(mapped);
-    } catch (error) {
-      setItems([]);
-
-      setErrorMessage(
-        error instanceof Error ? error.message : "Gagal mengambil data sesi.",
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
+    let isMounted = true;
+
+    const loadSesi = async () => {
+      setIsLoading(true);
+      setErrorMessage("");
+
+      try {
+        const data = await getSesiByKurikulumApi(periode.id);
+
+        if (!isMounted) return;
+
+        const mapped = data.map(mapApiToItem);
+
+        setItems(normalizeItems(mapped));
+      } catch (error) {
+        if (!isMounted) return;
+
+        setItems([]);
+
+        setErrorMessage(
+          error instanceof Error ? error.message : "Gagal mengambil data sesi.",
+        );
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
     void loadSesi();
+
+    return () => {
+      isMounted = false;
+    };
   }, [periode.id]);
 
   /**
@@ -127,54 +164,67 @@ export function Sesi() {
   /**
    * Tambah sesi.
    *
-   * Nomor sesi tidak diketik user karena UI sekarang memang
-   * hanya meminta Jam Mulai dan Jam Berakhir.
+   * Backend HANYA menerima:
+   * - jam_mulai
+   * - jam_akhir
    *
-   * Nomor berikutnya dihitung dari nomor terbesar yang sudah
-   * ada, kemudian BE menerima `nama` sebagai angka.
+   * Tidak ada field `nama` yang dikirim.
    */
   const handleAdd = async (data: SesiFormData) => {
     setErrorMessage("");
 
-    const maxNomor = items.reduce((max, item) => Math.max(max, item.nama), 0);
+    try {
+      const created = await createSesiApi(periode.id, {
+        jam_mulai: normalizeTimeForApi(data.jamMulai),
+        jam_akhir: normalizeTimeForApi(data.jamBerakhir),
+      });
 
-    const nextNomor = maxNomor + 1;
+      const newItem = mapApiToItem(created);
 
-    const created = await createSesiApi(periode.id, {
-      nama: nextNomor,
-      jam_mulai: normalizeTimeForApi(data.jamMulai),
-      jam_akhir: normalizeTimeForApi(data.jamBerakhir),
-    });
+      setItems((prev) => normalizeItems([...prev, newItem]));
 
-    setItems((prev) =>
-      [...prev, mapApiToItem(created)].sort((a, b) => a.nama - b.nama),
-    );
+      setIsAddOpen(false);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Gagal menambahkan data sesi.",
+      );
+    }
   };
 
   /**
    * Edit sesi.
    *
-   * Nomor sesi tetap dipertahankan.
-   * Yang diubah dari form hanya jam mulai dan jam berakhir.
+   * Backend HANYA menerima:
+   * - jam_mulai
+   * - jam_akhir
+   *
+   * Tidak ada field `nama` yang dikirim.
    */
   const handleEdit = async (data: SesiFormData) => {
     if (!editItem) return;
 
     setErrorMessage("");
 
-    const updated = await updateSesiApi(editItem.id, {
-      nama: editItem.nama,
-      jam_mulai: normalizeTimeForApi(data.jamMulai),
-      jam_akhir: normalizeTimeForApi(data.jamBerakhir),
-    });
+    try {
+      const updated = await updateSesiApi(editItem.id, {
+        jam_mulai: normalizeTimeForApi(data.jamMulai),
+        jam_akhir: normalizeTimeForApi(data.jamBerakhir),
+      });
 
-    setItems((prev) =>
-      prev
-        .map((item) => (item.id === editItem.id ? mapApiToItem(updated) : item))
-        .sort((a, b) => a.nama - b.nama),
-    );
+      const updatedItem = mapApiToItem(updated);
 
-    setEditItem(null);
+      setItems((prev) =>
+        normalizeItems(
+          prev.map((item) => (item.id === editItem.id ? updatedItem : item)),
+        ),
+      );
+
+      setEditItem(null);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Gagal mengubah data sesi.",
+      );
+    }
   };
 
   /**
@@ -188,7 +238,9 @@ export function Sesi() {
     try {
       await deleteSesiApi(deleteItem.id);
 
-      setItems((prev) => prev.filter((item) => item.id !== deleteItem.id));
+      setItems((prev) =>
+        normalizeItems(prev.filter((item) => item.id !== deleteItem.id)),
+      );
 
       setDeleteItem(null);
     } catch (error) {
