@@ -162,7 +162,7 @@ export interface MataKuliahListResponse {
 }
 
 export interface MataKuliahPayload {
-  kode: number;
+  kode: string;
   nama: string;
   sks: number;
   prodi: string;
