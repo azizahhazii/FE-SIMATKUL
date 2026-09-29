@@ -59,7 +59,7 @@ function mapApiToItem(item: MataKuliahApiItem): KurikulumItem {
  */
 function mapFormToPayload(data: MataKuliahFormData): MataKuliahPayload {
   return {
-    kode: Number(data.kodeMK),
+    kode: data.kodeMK,
     nama: data.namaMataKuliah.trim(),
     sks: Number(data.sks),
     prodi: data.prodi,

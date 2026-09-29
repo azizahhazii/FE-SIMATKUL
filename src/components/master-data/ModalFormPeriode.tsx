@@ -3,9 +3,11 @@ import { Input } from "assets-design-system";
 import CalendarIcon from "@solar-icons/react/time/Calendar";
 import FileRight from "@solar-icons/react/files/FileRight";
 import FileRemove from "@solar-icons/react/files/FileRemove";
+
 import { ModalForm } from "./ModalForm";
 import { SelectField } from "./SelectField";
 import { SEMESTER_PERIODE_OPTIONS } from "./formOptions";
+
 import type { PeriodeAkademik } from "../../types/periodeAkademik";
 
 export interface PeriodeFormData {
@@ -20,9 +22,7 @@ export interface PeriodeFormData {
 interface ModalFormPeriodeProps {
   isOpen: boolean;
   mode: "tambah" | "edit";
-  /** Hanya dipakai saat mode "edit". */
   periode?: PeriodeAkademik | null;
-  /** Pilihan untuk dropdown "Pilih periode sumber" pada mode "tambah". */
   periodeList?: PeriodeAkademik[];
   onClose: () => void;
   onSave: (data: PeriodeFormData) => void;
@@ -54,12 +54,31 @@ const SUMBER_DATA_CARDS = [
   },
 ];
 
-/** "Gasal 2026/2027 – Draft 1" -> { semester, awalTahun, deskripsi }. */
+/**
+ * Mengambil data semester, tahun awal, dan deskripsi
+ * dari nama periode yang dikembalikan backend.
+ *
+ * Contoh:
+ * "Ganjil 2026/2027 – Draft 1"
+ *
+ * menjadi:
+ * {
+ *   semester: "Ganjil",
+ *   awalTahun: "2026",
+ *   deskripsi: "Draft 1"
+ * }
+ */
 function parseNamaPeriode(nama: string): Partial<PeriodeFormData> {
   const [utama, deskripsi = ""] = nama.split(" – ");
+
   const [semester = "", tahun = ""] = utama.split(" ");
   const [awalTahun = ""] = tahun.split("/");
-  return { semester, awalTahun, deskripsi };
+
+  return {
+    semester,
+    awalTahun,
+    deskripsi,
+  };
 }
 
 export function ModalFormPeriode({
@@ -74,11 +93,17 @@ export function ModalFormPeriode({
 
   useEffect(() => {
     if (!isOpen) return;
-    setForm(
-      mode === "edit" && periode
-        ? { ...EMPTY_FORM, ...parseNamaPeriode(periode.nama) }
-        : EMPTY_FORM,
-    );
+
+    if (mode === "edit" && periode) {
+      setForm({
+        ...EMPTY_FORM,
+        ...parseNamaPeriode(periode.nama),
+        sumberData: "kosong",
+        periodeSumber: null,
+      });
+    } else {
+      setForm(EMPTY_FORM);
+    }
   }, [isOpen, mode, periode]);
 
   const akhirTahun = /^\d{4}$/.test(form.awalTahun)
@@ -86,11 +111,20 @@ export function ModalFormPeriode({
     : "";
 
   const handleSubmit = () => {
+    if (!form.awalTahun || !form.semester) {
+      return;
+    }
+
+    if (form.sumberData === "salin" && !form.periodeSumber) {
+      return;
+    }
+
     onSave({
       ...form,
       akhirTahun,
       periodeSumber: form.sumberData === "salin" ? form.periodeSumber : null,
     });
+
     onClose();
   };
 
@@ -120,9 +154,13 @@ export function ModalFormPeriode({
           leftIcon={<CalendarIcon weight="BoldDuotone" />}
           value={form.awalTahun}
           onChange={(e) =>
-            setForm((prev) => ({ ...prev, awalTahun: e.target.value }))
+            setForm((prev) => ({
+              ...prev,
+              awalTahun: e.target.value,
+            }))
           }
         />
+
         <Input
           label="Akhir tahun ajaran"
           placeholder="terisi otomatis"
@@ -134,10 +172,15 @@ export function ModalFormPeriode({
 
       <SelectField
         label="Semester"
-        placeholder="Gasal/Genap"
+        placeholder="Ganjil/Genap"
         options={SEMESTER_PERIODE_OPTIONS}
         value={form.semester}
-        onChange={(value) => setForm((prev) => ({ ...prev, semester: value }))}
+        onChange={(value) =>
+          setForm((prev) => ({
+            ...prev,
+            semester: value,
+          }))
+        }
       />
 
       <Input
@@ -147,7 +190,10 @@ export function ModalFormPeriode({
         maxLength={12}
         value={form.deskripsi}
         onChange={(e) =>
-          setForm((prev) => ({ ...prev, deskripsi: e.target.value }))
+          setForm((prev) => ({
+            ...prev,
+            deskripsi: e.target.value,
+          }))
         }
       />
 
@@ -165,7 +211,10 @@ export function ModalFormPeriode({
                   key={card.id}
                   type="button"
                   onClick={() =>
-                    setForm((prev) => ({ ...prev, sumberData: card.id }))
+                    setForm((prev) => ({
+                      ...prev,
+                      sumberData: card.id,
+                    }))
                   }
                   className={`flex flex-col items-start gap-2 rounded-3 border p-3.5 text-left transition ${
                     isSelected
@@ -180,6 +229,7 @@ export function ModalFormPeriode({
                         isSelected ? "text-primary-400" : "text-neutral-800"
                       }`}
                     />
+
                     <span
                       className={`text-b4 font-bold ${
                         isSelected ? "text-primary-400" : "text-neutral-1000"
@@ -188,6 +238,7 @@ export function ModalFormPeriode({
                       {card.judul}
                     </span>
                   </span>
+
                   <span
                     className={`text-b5 ${
                       isSelected ? "text-primary-400" : "text-neutral-800"
@@ -209,7 +260,10 @@ export function ModalFormPeriode({
               }))}
               value={form.periodeSumber ?? ""}
               onChange={(value) =>
-                setForm((prev) => ({ ...prev, periodeSumber: value }))
+                setForm((prev) => ({
+                  ...prev,
+                  periodeSumber: value,
+                }))
               }
             />
           )}
