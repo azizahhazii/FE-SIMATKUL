@@ -93,18 +93,6 @@ export function ModalFormJadwal({
 
   const [formError, setFormError] = useState("");
 
-  /**
-   * Saat modal dibuka:
-   *
-   * - tombol Tambah Jadwal
-   *   -> form kosong
-   *
-   * - klik slot Preview
-   *   -> form memakai data prefill
-   *
-   * - Edit
-   *   -> form memakai data jadwal
-   */
   useEffect(() => {
     if (!isOpen) {
       return;
@@ -115,10 +103,6 @@ export function ModalFormJadwal({
     setFormError("");
   }, [isOpen, initialData]);
 
-  /**
-   * Jadwal yang sedang diedit tidak
-   * ikut dihitung sebagai konflik.
-   */
   const jadwalUntukConflict = useMemo(() => {
     if (!ignoreId) {
       return jadwal;
@@ -127,10 +111,6 @@ export function ModalFormJadwal({
     return jadwal.filter((item) => item.id !== ignoreId);
   }, [jadwal, ignoreId]);
 
-  /**
-   * Availability dihitung berdasarkan
-   * Hari + Sesi yang sedang dipilih.
-   */
   const usage = useMemo(
     () => getSlotUsage(jadwalUntukConflict, form.hari, form.sesi),
     [jadwalUntukConflict, form.hari, form.sesi],
@@ -148,24 +128,25 @@ export function ModalFormJadwal({
       !form.ruang
     ) {
       setFormError("Semua field harus diisi.");
+
       return;
     }
 
-    /**
-     * Cek ulang sebelum submit.
-     */
     if (usage.dosen.has(form.dosen)) {
       setFormError("Dosen sudah digunakan pada hari dan sesi tersebut.");
+
       return;
     }
 
     if (usage.kelas.has(form.kelas)) {
       setFormError("Kelas sudah digunakan pada hari dan sesi tersebut.");
+
       return;
     }
 
     if (usage.ruang.has(form.ruang)) {
       setFormError("Ruang sudah digunakan pada hari dan sesi tersebut.");
+
       return;
     }
 
@@ -291,3 +272,5 @@ export function ModalFormJadwal({
     </ModalForm>
   );
 }
+
+export default ModalFormJadwal;
