@@ -46,6 +46,7 @@ export function buildHeatmapRows(
   return [...groups.entries()]
     .map(([label, items]) => {
       const slots: Record<string, number> = {};
+
       const slotJadwal: Record<string, Jadwal[]> = {};
 
       // Buat semua 25 slot terlebih dahulu.
@@ -54,6 +55,7 @@ export function buildHeatmapRows(
           const key = slotKey(hari, sesi);
 
           slots[key] = 0;
+
           slotJadwal[key] = [];
         }
       }
@@ -63,11 +65,14 @@ export function buildHeatmapRows(
         const key = slotKey(item.hari, item.sesi);
 
         slots[key] = (slots[key] ?? 0) + 1;
+
         slotJadwal[key] = [...(slotJadwal[key] ?? []), item];
       }
 
       const terisi = Object.values(slots).filter((n) => n > 0).length;
+
       const okupansi = Math.round((terisi / TOTAL_SLOT) * 100);
+
       const totalSks = items.reduce((sum, item) => sum + item.sks, 0);
 
       return {
@@ -118,12 +123,16 @@ export function getSlotUsage(
     ruang: new Set(),
   };
 
-  if (!hari || !sesi) return usage;
+  if (!hari || !sesi) {
+    return usage;
+  }
 
   for (const item of jadwal) {
     if (item.hari === hari && String(item.sesi) === sesi) {
       usage.dosen.add(item.dosen);
+
       usage.kelas.add(item.kelas);
+
       usage.ruang.add(item.ruang);
     }
   }

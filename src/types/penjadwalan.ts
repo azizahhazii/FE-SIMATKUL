@@ -1,10 +1,12 @@
 import type { ProdiId } from "../components/master-data/ProdiFilterCards";
 
 export const HARI_LIST = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"] as const;
+
 export type Hari = (typeof HARI_LIST)[number];
 
 /** Nomor sesi yang dipakai grid preview. Selaras dengan Master Data > Sesi. */
 export const SESI_LIST = [1, 2, 3, 4, 5] as const;
+
 export type Sesi = (typeof SESI_LIST)[number];
 
 /** Total slot per baris = 5 hari x 5 sesi. Dipakai untuk hitung okupansi. */

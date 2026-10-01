@@ -635,3 +635,209 @@ export async function deleteSesiApi(id: string | number): Promise<SesiApiItem> {
 
   return response.data;
 }
+
+// ============================================================
+// PENJADWALAN
+// ============================================================
+
+export interface PenjadwalanApiItem {
+  id: number;
+  kurikulum_id?: number;
+
+  matkul_id: number;
+  ruang_id: number;
+  kelas_id: number;
+
+  hari: string;
+
+  sks?: number;
+
+  nama_matkul?: string;
+  nama_ruang?: string;
+  kode_kelas?: string;
+  nama_dosen?: string;
+
+  kode_mk?: string | number;
+  kode_matkul?: string | number;
+
+  sesi_ids?: number[];
+
+  dosen_ids?: number[];
+
+  sesi?: Array<{
+    id: number;
+    jam_mulai?: string;
+    jam_akhir?: string;
+  }>;
+
+  dosen?: Array<{
+    id: number;
+    nama: string;
+  }>;
+}
+
+export interface PenjadwalanFormOptionsApi {
+  ruang: Array<{
+    id: number;
+    nama: string;
+  }>;
+
+  dosen: Array<{
+    id: number;
+    nama: string;
+  }>;
+
+  sesi: Array<{
+    id: number;
+    nama: string;
+  }>;
+
+  kelas: Array<{
+    id: number;
+    kode_kelas: string;
+    prodi: string;
+    semester: number;
+    kelas: string;
+  }>;
+
+  mata_kuliah: Array<{
+    id: number;
+    nama: string;
+    prodi: string;
+  }>;
+}
+
+export interface PenjadwalanPayload {
+  kurikulum_id: number;
+  matkul_id: number;
+  ruang_id: number;
+  kelas_id: number;
+  hari: string;
+  sesi_ids: number[];
+  dosen_ids: number[];
+}
+
+/**
+ * GET daftar jadwal berdasarkan periode/kurikulum.
+ *
+ * Endpoint terbaru dari BE:
+ * GET /api/penjadwalan/:kurikulumId
+ */
+export async function getPenjadwalanByKurikulumApi(
+  kurikulumId: string | number,
+): Promise<PenjadwalanApiItem[]> {
+  const response = await apiRequest<{
+    message: string;
+    data: unknown;
+  }>(`/api/penjadwalan/${kurikulumId}`, {
+    method: "GET",
+  });
+
+  const data = response.data;
+
+  if (Array.isArray(data)) {
+    return data as PenjadwalanApiItem[];
+  }
+
+  /**
+   * Antisipasi kalau response BE membungkus array
+   * di property jadwal.
+   */
+  if (
+    data &&
+    typeof data === "object" &&
+    "jadwal" in data &&
+    Array.isArray((data as { jadwal?: unknown }).jadwal)
+  ) {
+    return (
+      (
+        data as {
+          jadwal: PenjadwalanApiItem[];
+        }
+      ).jadwal ?? []
+    );
+  }
+
+  return [];
+}
+
+/**
+ * GET opsi form Penjadwalan.
+ *
+ * GET /api/penjadwalan/form-options/:kurikulumId
+ */
+export async function getPenjadwalanFormOptionsApi(
+  kurikulumId: string | number,
+): Promise<PenjadwalanFormOptionsApi> {
+  const response = await apiRequest<{
+    message: string;
+    data: PenjadwalanFormOptionsApi;
+  }>(`/api/penjadwalan/form-options/${kurikulumId}`, {
+    method: "GET",
+  });
+
+  return {
+    ruang: Array.isArray(response.data?.ruang) ? response.data.ruang : [],
+
+    dosen: Array.isArray(response.data?.dosen) ? response.data.dosen : [],
+
+    sesi: Array.isArray(response.data?.sesi) ? response.data.sesi : [],
+
+    kelas: Array.isArray(response.data?.kelas) ? response.data.kelas : [],
+
+    mata_kuliah: Array.isArray(response.data?.mata_kuliah)
+      ? response.data.mata_kuliah
+      : [],
+  };
+}
+
+/**
+ * POST tambah jadwal.
+ */
+export async function createPenjadwalanApi(
+  payload: PenjadwalanPayload,
+): Promise<PenjadwalanApiItem> {
+  const response = await apiRequest<{
+    message: string;
+    data: PenjadwalanApiItem;
+  }>("/api/penjadwalan", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+  return response.data;
+}
+
+/**
+ * PUT edit jadwal.
+ */
+export async function updatePenjadwalanApi(
+  id: string | number,
+  payload: PenjadwalanPayload,
+): Promise<PenjadwalanApiItem> {
+  const response = await apiRequest<{
+    message: string;
+    data: PenjadwalanApiItem;
+  }>(`/api/penjadwalan/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+
+  return response.data;
+}
+
+/**
+ * DELETE hapus jadwal.
+ */
+export async function deletePenjadwalanApi(
+  id: string | number,
+): Promise<PenjadwalanApiItem> {
+  const response = await apiRequest<{
+    message: string;
+    data: PenjadwalanApiItem;
+  }>(`/api/penjadwalan/${id}`, {
+    method: "DELETE",
+  });
+
+  return response.data;
+}
