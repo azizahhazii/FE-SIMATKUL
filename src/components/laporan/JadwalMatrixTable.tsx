@@ -25,22 +25,25 @@ export function JadwalMatrixTable<TInfo>({
   emptyMessage = "Belum ada data jadwal untuk filter ini.",
 }: JadwalMatrixTableProps<TInfo>) {
   return (
-    <div className="w-full bg-neutral-100">
-      <table className="w-full border-collapse text-left">
+    <div className="w-full overflow-x-auto bg-neutral-100">
+      <table className="w-full min-w-[800px] table-fixed border-collapse text-left">
         <thead className="bg-neutral-400">
           <tr>
-            <th className="sticky left-0 z-10 w-1/5 border-r border-neutral-400 bg-neutral-400 px-3 py-5 text-center text-sm font-bold text-neutral-1000">
+            {/* Kolom 1: Nama Ruang/Dosen/Kelas - Lebar Tetap 180px */}
+            <th className="sticky left-0 z-10 w-[180px] min-w-[180px] border-r border-neutral-400 bg-neutral-400 px-3 py-5 text-center text-sm font-bold text-neutral-1000">
               {labelKolomInfo}
             </th>
 
-            <th className="w-20 border-r border-neutral-400 bg-neutral-400 px-3 py-3 text-center text-sm font-bold text-neutral-1000">
+            {/* Kolom 2: Sesi - Lebar Tetap 70px */}
+            <th className="w-[70px] min-w-[70px] border-r border-neutral-400 bg-neutral-400 px-2 py-5 text-center text-sm font-bold text-neutral-1000">
               Sesi
             </th>
 
+            {/* Kolom 3..7: Hari Senin - Jumat - Dibagi Rata */}
             {DAFTAR_HARI.map((hari) => (
               <th
                 key={hari}
-                className="px-3 py-3 text-center text-sm font-bold text-neutral-1000"
+                className="px-3 py-5 text-center text-sm font-bold text-neutral-1000"
               >
                 {hari}
               </th>
@@ -49,13 +52,6 @@ export function JadwalMatrixTable<TInfo>({
         </thead>
 
         <tbody className="bg-neutral-100">
-          {/* Jarak kecil antara header dan isi */}
-          <tr className="h-2 bg-neutral-100">
-            <td className="sticky left-0 z-10 border-r border-neutral-400 bg-neutral-100" />
-            <td className="border-r border-neutral-400" />
-            <td colSpan={DAFTAR_HARI.length} />
-          </tr>
-
           {loading ? (
             <tr>
               <td
@@ -116,22 +112,22 @@ function BarisEntitasJadwal<TInfo>({
         return (
           <tr
             key={barisSesi.sesi}
-            className={`h-1 ${
+            className={`border-b border-neutral-300 ${
               tampilkanBorderBawah ? "border-b-2 border-neutral-500" : ""
             }`}
           >
             {indexSesi === 0 && (
               <td
                 rowSpan={jumlahBarisSesi}
-                className="sticky left-0 z-10 border-r border-neutral-400 bg-neutral-100 px-3 py-3.5 text-center align-middle"
+                className="sticky left-0 z-10 w-[180px] min-w-[180px] border-r border-neutral-400 bg-neutral-100 px-3 py-4 text-center align-top"
               >
-                <div className="flex flex-col items-center justify-center text-xs">
+                <div className="sticky top-4 flex flex-col items-center justify-center text-xs">
                   {renderInfo(baris.info)}
                 </div>
               </td>
             )}
 
-            <td className="h-full border-r border-neutral-400 px-3 py-3.5 text-center align-middle">
+            <td className="border-r border-neutral-400 px-2 py-3.5 text-center align-middle">
               <span
                 className={`inline-flex w-full max-w-[52px] items-center justify-center rounded-2 bg-[#0298AB1A] text-xs font-bold text-primary-500 ${TINGGI_MINIMUM_BARIS}`}
               >
@@ -172,7 +168,7 @@ function BarisEntitasJadwal<TInfo>({
                 <td
                   key={hari}
                   rowSpan={jumlahSesiSpan}
-                  className="h-full px-2.5 py-3.5 align-middle"
+                  className="px-2.5 py-3.5 align-middle"
                 >
                   {!adaJadwal ? (
                     <div

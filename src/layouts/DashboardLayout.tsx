@@ -18,36 +18,24 @@ export function DashboardLayout() {
   const isGuest = user?.role?.toLowerCase() === "guest";
 
   const items: SidebarItem[] = [
-    {
-      key: "master-data",
-      icon: (
-        <Database
-          weight="BoldDuotone"
-          className={isGuest ? "opacity-35" : ""}
-        />
-      ),
-      label: "Master Data",
-      active: !isGuest && location.pathname.startsWith("/master-data"),
-      onClick: () => {
-        if (isGuest) return;
-        navigate("/master-data");
-      },
-    },
-    {
-      key: "penjadwalan",
-      icon: (
-        <CalendarMark
-          weight="BoldDuotone"
-          className={isGuest ? "opacity-35" : ""}
-        />
-      ),
-      label: "Penjadwalan",
-      active: !isGuest && location.pathname.startsWith("/penjadwalan"),
-      onClick: () => {
-        if (isGuest) return;
-        navigate("/penjadwalan");
-      },
-    },
+    ...(!isGuest
+      ? [
+          {
+            key: "master-data",
+            icon: <Database weight="BoldDuotone" />,
+            label: "Master Data",
+            active: location.pathname.startsWith("/master-data"),
+            onClick: () => navigate("/master-data"),
+          },
+          {
+            key: "penjadwalan",
+            icon: <CalendarMark weight="BoldDuotone" />,
+            label: "Penjadwalan",
+            active: location.pathname.startsWith("/penjadwalan"),
+            onClick: () => navigate("/penjadwalan"),
+          },
+        ]
+      : []),
     {
       key: "hasil",
       icon: <DocumentText weight="BoldDuotone" />,

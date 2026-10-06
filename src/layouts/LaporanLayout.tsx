@@ -1,19 +1,27 @@
-import { useId, useState } from "react";
-
+import { useId, useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-
 import { Text } from "assets-design-system";
-
 import Calendar from "@solar-icons/react/time/Calendar";
-
-import { dummyPeriodeAkademik } from "../data/periodeAkademik";
 
 import {
   LaporanTabs,
   type LaporanTab,
 } from "../components/laporan/LaporanTabs";
-
 import { useAuth } from "../context/AuthContext";
+import { apiRequest } from "../lib/axios";
+
+interface PeriodeItem {
+  id: number | string;
+  nama?: string;
+  nama_kurikulum?: string;
+  tahun_akademik?: string;
+  semester?: string;
+}
+
+interface ApiResponse<T> {
+  message?: string;
+  data: T;
+}
 
 const TAB_TO_PATH: Record<LaporanTab, string> = {
   "Jadwal Dosen": "dosen",
@@ -38,13 +46,34 @@ export function LaporanLayout() {
   const periodeSelectId = useId();
 
   const { user } = useAuth();
-
   const isAdmin = user?.role?.toLowerCase() === "admin";
 
+  const [periodeList, setPeriodeList] = useState<PeriodeItem[]>([]);
   const [selectedPeriodeId, setSelectedPeriodeId] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    async function fetchPeriodeList() {
+      try {
+        setIsLoading(true);
+        const response = await apiRequest<ApiResponse<PeriodeItem[]>>(
+          "/api/master-data/kurikulum",
+          { method: "GET" },
+        );
+
+        const data = response.data || [];
+        setPeriodeList(data);
+      } catch (error) {
+        console.error("Gagal mengambil daftar periode/kurikulum:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchPeriodeList();
+  }, []);
 
   const currentSegment = location.pathname.split("/").pop() ?? "dosen";
-
   const activeTab = PATH_TO_TAB[currentSegment] ?? "Jadwal Dosen";
 
   return (
@@ -82,19 +111,24 @@ export function LaporanLayout() {
                 id={periodeSelectId}
                 value={selectedPeriodeId}
                 onChange={(e) => setSelectedPeriodeId(e.target.value)}
+                disabled={isLoading}
                 className={`w-full appearance-none rounded-xl border border-neutral-600 bg-transparent py-2 pl-10 pr-9 text-sm font-medium transition-colors hover:border-neutral-700 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400 ${
                   selectedPeriodeId === ""
                     ? "text-neutral-700"
                     : "text-neutral-1000"
                 }`}
               >
+                {/* Properti 'hidden' menyembunyikan opsi ini dari popup menu saat diklik */}
                 <option value="" disabled hidden>
-                  Pilih periode akademik
+                  {isLoading ? "Memuat periode..." : "Pilih periode akademik"}
                 </option>
 
-                {dummyPeriodeAkademik.map((periode) => (
-                  <option key={periode.id} value={periode.id}>
-                    {periode.nama}
+                {periodeList.map((periode) => (
+                  <option key={periode.id} value={String(periode.id)}>
+                    {periode.nama ||
+                      periode.nama_kurikulum ||
+                      `${periode.semester ?? ""} ${periode.tahun_akademik ?? ""}`.trim() ||
+                      `Periode ${periode.id}`}
                   </option>
                 ))}
               </select>
@@ -119,21 +153,10 @@ export function LaporanLayout() {
         </div>
 
         {/* ================= TABS ================= */}
-        {isAdmin ? (
-          <div className="flex items-center">
-            <button
-              type="button"
-              className="rounded-xl border border-primary-400 bg-primary-400 px-5 py-2.5 text-sm font-semibold text-white shadow-sm"
-            >
-              Jadwal Dosen
-            </button>
-          </div>
-        ) : (
-          <LaporanTabs
-            activeTab={activeTab}
-            onTabChange={(tab) => navigate(`/laporan/${TAB_TO_PATH[tab]}`)}
-          />
-        )}
+        <LaporanTabs
+          activeTab={activeTab}
+          onTabChange={(tab) => navigate(`/laporan/${TAB_TO_PATH[tab]}`)}
+        />
 
         {/* ================= CONTENT ================= */}
         <Outlet

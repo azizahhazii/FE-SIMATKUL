@@ -75,21 +75,23 @@ export function LaporanToolbar({
       </div>
 
       {/* ================= EXPORT ================= */}
-      <Button
-        theme="primary"
-        variant="solid"
-        size="md"
-        onClick={handleExport}
-        disabled={exportDisabled}
-        className={exportDisabled ? "!opacity-60" : ""}
-        title={isGuest ? "Ekspor Excel hanya tersedia untuk Admin" : undefined}
-      >
-        <div className="flex items-center gap-2">
-          <FileDownload weight="BoldDuotone" size={20} />
+      {!isGuest && (
+        <Button
+          theme="primary"
+          variant="solid"
+          size="md"
+          onClick={handleExport}
+          disabled={exportDisabled}
+          className={exportDisabled ? "!opacity-60" : ""}
+          title={isGuest ? "Ekspor Excel hanya tersedia untuk Admin" : undefined}
+        >
+          <div className="flex items-center gap-2">
+            <FileDownload weight="BoldDuotone" size={20} />
 
-          <span>Ekspor ke Excel</span>
-        </div>
-      </Button>
+            <span>Ekspor ke Excel</span>
+          </div>
+        </Button>
+      )}
     </div>
   );
 }
