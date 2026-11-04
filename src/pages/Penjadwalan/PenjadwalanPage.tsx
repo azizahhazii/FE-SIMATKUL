@@ -9,7 +9,7 @@ import {
 } from "../../components/master-data/DataTable";
 import { RowActions } from "../../components/master-data/RowActions";
 import { ModalHapusData } from "../../components/master-data/ModalHapusData";
-import { SelectField } from "../../components/master-data/SelectField";
+import { SearchableSelectField } from "../../components/master-data/SearchableSelectField";
 import { PreviewPenjadwalan } from "../../components/penjadwalan/PreviewPenjadwalan";
 
 import { ModalFormJadwal, type JadwalFormData } from "./ModalFormJadwal";
@@ -787,9 +787,9 @@ export function PenjadwalanPage() {
           </div>
 
           <div className="w-[340px]">
-            <SelectField
+            <SearchableSelectField
               label="Periode Akademik"
-              placeholder="Pilih periode akademik"
+              placeholder="Cari periode akademik..."
               options={periodeOptions}
               value={periodeId}
               onChange={setPeriodeId}

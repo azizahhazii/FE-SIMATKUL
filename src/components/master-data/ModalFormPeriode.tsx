@@ -6,6 +6,7 @@ import FileRemove from "@solar-icons/react/files/FileRemove";
 
 import { ModalForm } from "./ModalForm";
 import { SelectField } from "./SelectField";
+import { SearchableSelectField } from "./SearchableSelectField";
 import { SEMESTER_PERIODE_OPTIONS } from "./formOptions";
 
 import type { PeriodeAkademik } from "../../types/periodeAkademik";
@@ -252,8 +253,8 @@ export function ModalFormPeriode({
           </div>
 
           {form.sumberData === "salin" && (
-            <SelectField
-              placeholder="Pilih periode sumber"
+            <SearchableSelectField
+              placeholder="Cari periode sumber..."
               options={periodeList.map((item) => ({
                 value: item.id,
                 label: item.nama,
