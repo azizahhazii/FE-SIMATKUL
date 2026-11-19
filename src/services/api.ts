@@ -399,16 +399,18 @@ export async function createDosenApi(
 export async function updateDosenApi(
   id: string | number,
   payload: DosenPayload,
-): Promise<DosenApiItem> {
+): Promise<DosenApiItem | null> {
   const response = await apiRequest<{
     message: string;
-    data: DosenApiItem;
+    data: DosenApiItem | null;
   }>(`/api/master-data/dosen/${id}`, {
     method: "PUT",
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      nama: payload.nama.trim(),
+    }),
   });
 
-  return response.data;
+  return response.data ?? null;
 }
 
 /**
