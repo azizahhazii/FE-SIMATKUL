@@ -27,8 +27,8 @@ interface DosenItem {
 
 function mapApiToItem(item: DosenApiItem): DosenItem {
   return {
-    id: String(item.id ?? ""),
-    nama: item.nama ?? "",
+    id: String(item?.id ?? ""),
+    nama: String(item?.nama ?? ""),
   };
 }
 
@@ -37,7 +37,6 @@ export function Dosen() {
 
   const [items, setItems] = useState<DosenItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -45,21 +44,15 @@ export function Dosen() {
   const [editItem, setEditItem] = useState<DosenItem | null>(null);
   const [deleteItem, setDeleteItem] = useState<DosenItem | null>(null);
 
-  /**
-- Ambil dosen berdasarkan kurikulum/periode
-- yang sedang dibuka.
-   */
   const loadDosen = async () => {
     setIsLoading(true);
     setErrorMessage("");
 
     try {
       const data = await getDosenByKurikulumApi(periode.id);
-
-      setItems(data.map(mapApiToItem));
+      setItems(Array.isArray(data) ? data.map(mapApiToItem) : []);
     } catch (error) {
       setItems([]);
-
       setErrorMessage(
         error instanceof Error ? error.message : "Gagal mengambil data dosen.",
       );
@@ -70,20 +63,16 @@ export function Dosen() {
 
   useEffect(() => {
     void loadDosen();
+    // loadDosen sengaja dipanggil ulang ketika periode berubah.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periode.id]);
 
-  /**
-- Search hanya memfilter state lokal.
-   */
+  // Pencarian mengabaikan kapitalisasi dan spasi di awal/akhir kata kunci.
+  const normalizedQuery = searchQuery.trim().toLocaleLowerCase("id-ID");
   const filtered = items.filter((item) =>
-    String(item.nama ?? "")
-      .toLowerCase()
-      .includes(String(searchQuery ?? "").toLowerCase()),
+    item.nama.toLocaleLowerCase("id-ID").includes(normalizedQuery),
   );
 
-  /**
-- Tambah dosen.
-   */
   const handleAdd = async (data: DosenFormData) => {
     setErrorMessage("");
 
@@ -91,33 +80,34 @@ export function Dosen() {
       nama: data.nama.trim(),
     });
 
-    setItems((prev) => [...prev, mapApiToItem(created)]);
+    setItems((previous) => [...previous, mapApiToItem(created)]);
   };
 
-  /**
-- Edit dosen.
-   */
   const handleEdit = async (data: DosenFormData) => {
     if (!editItem) return;
 
     setErrorMessage("");
 
+    // Endpoint PUT hanya menerima field yang memang digunakan BE: nama.
     const updated = await updateDosenApi(editItem.id, {
       nama: data.nama.trim(),
     });
 
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === editItem.id ? mapApiToItem(updated) : item,
+    // Beberapa respons BE dapat mengembalikan data null setelah update sukses.
+    // Gunakan data form sebagai fallback agar tabel tidak crash.
+    const updatedItem: DosenItem = updated
+      ? mapApiToItem(updated)
+      : { ...editItem, nama: data.nama.trim() };
+
+    setItems((previous) =>
+      previous.map((item) =>
+        item.id === editItem.id ? updatedItem : item,
       ),
     );
 
     setEditItem(null);
   };
 
-  /**
-- Delete dosen.
-   */
   const handleDelete = async () => {
     if (!deleteItem) return;
 
@@ -125,15 +115,14 @@ export function Dosen() {
 
     try {
       await deleteDosenApi(deleteItem.id);
-
-      setItems((prev) => prev.filter((item) => item.id !== deleteItem.id));
-
+      setItems((previous) =>
+        previous.filter((item) => item.id !== deleteItem.id),
+      );
       setDeleteItem(null);
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Gagal menghapus data dosen.",
       );
-
       setDeleteItem(null);
     }
   };
@@ -162,7 +151,6 @@ export function Dosen() {
   return (
     <>
       <div className="overflow-hidden rounded-2 border border-neutral-600 bg-white">
-        {/* ================= TOOLBAR ================= */}
         <MasterDataToolbar
           searchPlaceholder="Cari nama dosen"
           searchQuery={searchQuery}
@@ -171,27 +159,26 @@ export function Dosen() {
           onAction={() => setIsAddOpen(true)}
         />
 
-        {/* ================= ERROR ================= */}
         {errorMessage && (
           <div className="border-b border-red-200 bg-red-50 px-4 py-3">
             <p className="text-b4 text-red-700">{errorMessage}</p>
           </div>
         )}
 
-        {/* ================= TABLE ================= */}
         <DataTable
           columns={columns}
           data={filtered}
           getRowKey={(item) => item.id}
           emptyMessage={
-            isLoading ? "Memuat data dosen..." : "Data dosen tidak ditemukan."
+            isLoading
+              ? "Memuat data dosen..."
+              : normalizedQuery
+                ? "Dosen dengan kata kunci tersebut tidak ditemukan."
+                : "Data dosen belum tersedia."
           }
         />
       </div>
 
-      {/* =====================================================
-          TAMBAH
-      ===================================================== */}
       <ModalFormDosen
         mode="tambah"
         isOpen={isAddOpen}
@@ -199,9 +186,6 @@ export function Dosen() {
         onSave={handleAdd}
       />
 
-      {/* =====================================================
-          EDIT
-      ===================================================== */}
       <ModalFormDosen
         mode="edit"
         isOpen={Boolean(editItem)}
@@ -216,9 +200,6 @@ export function Dosen() {
         onSave={handleEdit}
       />
 
-      {/* =====================================================
-          DELETE
-      ===================================================== */}
       <ModalHapusData
         isOpen={Boolean(deleteItem)}
         onClose={() => setDeleteItem(null)}
