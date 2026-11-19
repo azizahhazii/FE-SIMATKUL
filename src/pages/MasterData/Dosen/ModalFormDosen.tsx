@@ -5,8 +5,6 @@ import { ModalForm } from "../../../components/master-data/ModalForm";
 
 export interface DosenFormData {
   nama: string;
-  nidn: string;
-  jabatan_akademik: string;
 }
 
 interface ModalFormDosenProps {
@@ -16,16 +14,14 @@ interface ModalFormDosenProps {
   onClose: () => void;
 
   /**
-   * Bisa synchronous maupun asynchronous
-   * karena data disimpan ke backend.
+- Bisa synchronous maupun asynchronous
+- karena data disimpan ke backend.
    */
   onSave: (data: DosenFormData) => void | Promise<void>;
 }
 
 const EMPTY_FORM: DosenFormData = {
   nama: "",
-  nidn: "",
-  jabatan_akademik: "",
 };
 
 export function ModalFormDosen({
@@ -60,30 +56,16 @@ export function ModalFormDosen({
       return;
     }
 
-    // Validasi NIDN
-    if (!form.nidn.trim()) {
-      setErrorMessage("NIDN tidak boleh kosong.");
-      return;
-    }
-
-    // Validasi jabatan akademik
-    if (!form.jabatan_akademik.trim()) {
-      setErrorMessage("Jabatan akademik tidak boleh kosong.");
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
       await onSave({
         nama: form.nama.trim(),
-        nidn: form.nidn.trim(),
-        jabatan_akademik: form.jabatan_akademik.trim(),
       });
 
       /**
-       * Modal hanya ditutup setelah request
-       * backend berhasil.
+- Modal hanya ditutup setelah request
+- backend berhasil.
        */
       onClose();
     } catch (error) {
@@ -126,34 +108,6 @@ export function ModalFormDosen({
           setForm((prev) => ({
             ...prev,
             nama: e.target.value,
-          }))
-        }
-        disabled={isSubmitting}
-      />
-
-      {/* ================= NIDN ================= */}
-      <Input
-        label="NIDN"
-        placeholder="masukan NIDN dosen"
-        value={form.nidn}
-        onChange={(e) =>
-          setForm((prev) => ({
-            ...prev,
-            nidn: e.target.value,
-          }))
-        }
-        disabled={isSubmitting}
-      />
-
-      {/* ================= JABATAN ================= */}
-      <Input
-        label="Jabatan Akademik"
-        placeholder="contoh: Lektor"
-        value={form.jabatan_akademik}
-        onChange={(e) =>
-          setForm((prev) => ({
-            ...prev,
-            jabatan_akademik: e.target.value,
           }))
         }
         disabled={isSubmitting}

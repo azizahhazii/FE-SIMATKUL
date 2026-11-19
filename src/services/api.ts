@@ -1,9 +1,4 @@
 import { apiRequest } from "../lib/axios";
-
-// ============================================================
-// AUTH
-// ============================================================
-
 export interface LoginRequest {
   username: string;
   password: string;
@@ -173,10 +168,10 @@ export interface MataKuliahPayload {
 }
 
 /**
- * Ambil seluruh mata kuliah yang terhubung dengan satu kurikulum.
+- Ambil seluruh mata kuliah yang terhubung dengan satu kurikulum.
  *
- * Kita memakai limit=all + paginate=false karena UI Kurikulum saat ini
- * belum memiliki pagination sendiri.
+- Kita memakai limit=all + paginate=false karena UI Kurikulum saat ini
+- belum memiliki pagination sendiri.
  */
 export async function getMataKuliahByKurikulumApi(
   kurikulumId: string | number,
@@ -199,9 +194,9 @@ export async function getMataKuliahByKurikulumApi(
 }
 
 /**
- * Tambah mata kuliah sekaligus menghubungkannya ke kurikulum.
+- Tambah mata kuliah sekaligus menghubungkannya ke kurikulum.
  *
- * POST /api/master-data/mata-kuliah/:kurikulumId
+- POST /api/master-data/mata-kuliah/:kurikulumId
  */
 export async function createMataKuliahApi(
   kurikulumId: string | number,
@@ -219,9 +214,9 @@ export async function createMataKuliahApi(
 }
 
 /**
- * Edit mata kuliah.
+- Edit mata kuliah.
  *
- * PUT /api/master-data/mata-kuliah/:id
+- PUT /api/master-data/mata-kuliah/:id
  */
 export async function updateMataKuliahApi(
   id: string | number,
@@ -239,9 +234,9 @@ export async function updateMataKuliahApi(
 }
 
 /**
- * Hapus mata kuliah.
+- Hapus mata kuliah.
  *
- * Backend juga menghapus relasi kurikulum-mata kuliah.
+- Backend juga menghapus relasi kurikulum-mata kuliah.
  */
 export async function deleteMataKuliahApi(
   id: string | number,
@@ -270,9 +265,9 @@ export interface RuangPayload {
 }
 
 /**
- * Ambil seluruh ruang yang terhubung dengan kurikulum tertentu.
+- Ambil seluruh ruang yang terhubung dengan kurikulum tertentu.
  *
- * GET /api/master-data/ruang/kurikulum/:kurikulumId
+- GET /api/master-data/ruang/kurikulum/:kurikulumId
  */
 export async function getRuangByKurikulumApi(
   kurikulumId: string | number,
@@ -288,9 +283,9 @@ export async function getRuangByKurikulumApi(
 }
 
 /**
- * Tambah ruang baru dan langsung hubungkan ke kurikulum.
+- Tambah ruang baru dan langsung hubungkan ke kurikulum.
  *
- * POST /api/master-data/ruang/:kurikulumId
+- POST /api/master-data/ruang/:kurikulumId
  */
 export async function createRuangApi(
   kurikulumId: string | number,
@@ -308,9 +303,9 @@ export async function createRuangApi(
 }
 
 /**
- * Edit data ruang.
+- Edit data ruang.
  *
- * PUT /api/master-data/ruang/:id
+- PUT /api/master-data/ruang/:id
  */
 export async function updateRuangApi(
   id: string | number,
@@ -328,9 +323,9 @@ export async function updateRuangApi(
 }
 
 /**
- * Hapus ruang.
+- Hapus ruang.
  *
- * DELETE /api/master-data/ruang/:id
+- DELETE /api/master-data/ruang/:id
  */
 export async function deleteRuangApi(
   id: string | number,
@@ -352,20 +347,16 @@ export async function deleteRuangApi(
 export interface DosenApiItem {
   id: number;
   nama: string;
-  nidn: string;
-  jabatan_akademik: string;
 }
 
 export interface DosenPayload {
   nama: string;
-  nidn: string;
-  jabatan_akademik: string;
 }
 
 /**
- * Ambil semua dosen yang terhubung dengan kurikulum tertentu.
+- Ambil semua dosen yang terhubung dengan kurikulum tertentu.
  *
- * GET /api/master-data/dosen/kurikulum/:kurikulumId
+- GET /api/master-data/dosen/kurikulum/:kurikulumId
  */
 export async function getDosenByKurikulumApi(
   kurikulumId: string | number,
@@ -381,9 +372,9 @@ export async function getDosenByKurikulumApi(
 }
 
 /**
- * Tambah dosen baru sekaligus menghubungkan ke kurikulum.
+- Tambah dosen baru sekaligus menghubungkan ke kurikulum.
  *
- * POST /api/master-data/dosen/:kurikulumId
+- POST /api/master-data/dosen/:kurikulumId
  */
 export async function createDosenApi(
   kurikulumId: string | number,
@@ -401,9 +392,9 @@ export async function createDosenApi(
 }
 
 /**
- * Edit dosen.
+- Edit dosen.
  *
- * PUT /api/master-data/dosen/:id
+- PUT /api/master-data/dosen/:id
  */
 export async function updateDosenApi(
   id: string | number,
@@ -421,9 +412,9 @@ export async function updateDosenApi(
 }
 
 /**
- * Hapus dosen.
+- Hapus dosen.
  *
- * DELETE /api/master-data/dosen/:id
+- DELETE /api/master-data/dosen/:id
  */
 export async function deleteDosenApi(
   id: string | number,
@@ -466,9 +457,9 @@ export interface KelasUpdatePayload {
 }
 
 /**
- * Ambil semua kelas yang terhubung dengan kurikulum tertentu.
+- Ambil semua kelas yang terhubung dengan kurikulum tertentu.
  *
- * GET /api/master-data/kelas/kurikulum/:kurikulumId
+- GET /api/master-data/kelas/kurikulum/:kurikulumId
  */
 export async function getKelasByKurikulumApi(
   kurikulumId: string | number,
@@ -484,12 +475,12 @@ export async function getKelasByKurikulumApi(
 }
 
 /**
- * Tambah kelas.
+- Tambah kelas.
  *
- * BE akan generate nama dan kode kelas berdasarkan konfigurasi
- * prodi, semester, kelas_teori, dan kelas_praktikum.
+- BE akan generate nama dan kode kelas berdasarkan konfigurasi
+- prodi, semester, kelas_teori, dan kelas_praktikum.
  *
- * POST /api/master-data/kelas/:kurikulumId
+- POST /api/master-data/kelas/:kurikulumId
  */
 export async function createKelasApi(
   kurikulumId: string | number,
@@ -507,12 +498,12 @@ export async function createKelasApi(
 }
 
 /**
- * Edit satu group kelas berdasarkan semester lama/baru.
+- Edit satu group kelas berdasarkan semester lama/baru.
  *
- * BE menghapus kelas pada from_semester lalu generate ulang
- * kelas berdasarkan to_semester, kelas_teori, dan kelas_praktikum.
+- BE menghapus kelas pada from_semester lalu generate ulang
+- kelas berdasarkan to_semester, kelas_teori, dan kelas_praktikum.
  *
- * PUT /api/master-data/kelas/:kurikulumId
+- PUT /api/master-data/kelas/:kurikulumId
  */
 export async function updateKelasApi(
   kurikulumId: string | number,
@@ -530,10 +521,10 @@ export async function updateKelasApi(
 }
 
 /**
- * Hapus seluruh kelas pada semester tertentu dalam satu kurikulum.
+- Hapus seluruh kelas pada semester tertentu dalam satu kurikulum.
  *
- * DELETE /api/master-data/kelas/:kurikulumId
- * Body: { semester }
+- DELETE /api/master-data/kelas/:kurikulumId
+- Body: { semester }
  */
 export async function deleteKelasApi(
   kurikulumId: string | number,
@@ -565,9 +556,9 @@ export interface SesiPayload {
 }
 
 /**
- * Ambil semua sesi yang terhubung dengan kurikulum tertentu.
+- Ambil semua sesi yang terhubung dengan kurikulum tertentu.
  *
- * GET /api/master-data/sesi/kurikulum/:kurikulumId
+- GET /api/master-data/sesi/kurikulum/:kurikulumId
  */
 export async function getSesiByKurikulumApi(
   kurikulumId: string | number,
@@ -583,9 +574,9 @@ export async function getSesiByKurikulumApi(
 }
 
 /**
- * Tambah sesi dan hubungkan ke kurikulum.
+- Tambah sesi dan hubungkan ke kurikulum.
  *
- * POST /api/master-data/sesi/:kurikulumId
+- POST /api/master-data/sesi/:kurikulumId
  */
 export async function createSesiApi(
   kurikulumId: string | number,
@@ -603,9 +594,9 @@ export async function createSesiApi(
 }
 
 /**
- * Edit sesi.
+- Edit sesi.
  *
- * PUT /api/master-data/sesi/:id
+- PUT /api/master-data/sesi/:id
  */
 export async function updateSesiApi(
   id: string | number,
@@ -623,7 +614,7 @@ export async function updateSesiApi(
 }
 
 /**
- * Hapus sesi.
+- Hapus sesi.
  */
 export async function deleteSesiApi(id: string | number): Promise<SesiApiItem> {
   const response = await apiRequest<{
@@ -718,10 +709,10 @@ export interface PenjadwalanPayload {
 }
 
 /**
- * GET daftar jadwal berdasarkan periode/kurikulum.
+- GET daftar jadwal berdasarkan periode/kurikulum.
  *
- * Endpoint terbaru dari BE:
- * GET /api/penjadwalan/:kurikulumId
+- Endpoint terbaru dari BE:
+- GET /api/penjadwalan/:kurikulumId
  */
 export async function getPenjadwalanByKurikulumApi(
   kurikulumId: string | number,
@@ -740,8 +731,8 @@ export async function getPenjadwalanByKurikulumApi(
   }
 
   /**
-   * Antisipasi kalau response BE membungkus array
-   * di property jadwal.
+- Antisipasi kalau response BE membungkus array
+- di property jadwal.
    */
   if (
     data &&
@@ -762,9 +753,9 @@ export async function getPenjadwalanByKurikulumApi(
 }
 
 /**
- * GET opsi form Penjadwalan.
+- GET opsi form Penjadwalan.
  *
- * GET /api/penjadwalan/form-options/:kurikulumId
+- GET /api/penjadwalan/form-options/:kurikulumId
  */
 export async function getPenjadwalanFormOptionsApi(
   kurikulumId: string | number,
@@ -792,7 +783,7 @@ export async function getPenjadwalanFormOptionsApi(
 }
 
 /**
- * POST tambah jadwal.
+- POST tambah jadwal.
  */
 export async function createPenjadwalanApi(
   payload: PenjadwalanPayload,
@@ -809,7 +800,7 @@ export async function createPenjadwalanApi(
 }
 
 /**
- * PUT edit jadwal.
+- PUT edit jadwal.
  */
 export async function updatePenjadwalanApi(
   id: string | number,
@@ -827,7 +818,7 @@ export async function updatePenjadwalanApi(
 }
 
 /**
- * DELETE hapus jadwal.
+- DELETE hapus jadwal.
  */
 export async function deletePenjadwalanApi(
   id: string | number,

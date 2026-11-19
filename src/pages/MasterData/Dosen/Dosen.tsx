@@ -23,16 +23,12 @@ import {
 interface DosenItem {
   id: string;
   nama: string;
-  nidn: string;
-  jabatan_akademik: string;
 }
 
 function mapApiToItem(item: DosenApiItem): DosenItem {
   return {
-    id: String(item.id),
-    nama: item.nama,
-    nidn: item.nidn,
-    jabatan_akademik: item.jabatan_akademik,
+    id: String(item.id ?? ""),
+    nama: item.nama ?? "",
   };
 }
 
@@ -50,8 +46,8 @@ export function Dosen() {
   const [deleteItem, setDeleteItem] = useState<DosenItem | null>(null);
 
   /**
-   * Ambil dosen berdasarkan kurikulum/periode
-   * yang sedang dibuka.
+- Ambil dosen berdasarkan kurikulum/periode
+- yang sedang dibuka.
    */
   const loadDosen = async () => {
     setIsLoading(true);
@@ -77,31 +73,29 @@ export function Dosen() {
   }, [periode.id]);
 
   /**
-   * Search hanya memfilter state lokal.
+- Search hanya memfilter state lokal.
    */
   const filtered = items.filter((item) =>
-    [item.nama, item.nidn, item.jabatan_akademik].some((value) =>
-      value.toLowerCase().includes(searchQuery.toLowerCase()),
-    ),
+    String(item.nama ?? "")
+      .toLowerCase()
+      .includes(String(searchQuery ?? "").toLowerCase()),
   );
 
   /**
-   * Tambah dosen.
+- Tambah dosen.
    */
   const handleAdd = async (data: DosenFormData) => {
     setErrorMessage("");
 
     const created = await createDosenApi(periode.id, {
       nama: data.nama.trim(),
-      nidn: data.nidn.trim(),
-      jabatan_akademik: data.jabatan_akademik.trim(),
     });
 
     setItems((prev) => [...prev, mapApiToItem(created)]);
   };
 
   /**
-   * Edit dosen.
+- Edit dosen.
    */
   const handleEdit = async (data: DosenFormData) => {
     if (!editItem) return;
@@ -110,8 +104,6 @@ export function Dosen() {
 
     const updated = await updateDosenApi(editItem.id, {
       nama: data.nama.trim(),
-      nidn: data.nidn.trim(),
-      jabatan_akademik: data.jabatan_akademik.trim(),
     });
 
     setItems((prev) =>
@@ -124,7 +116,7 @@ export function Dosen() {
   };
 
   /**
-   * Delete dosen.
+- Delete dosen.
    */
   const handleDelete = async () => {
     if (!deleteItem) return;
@@ -217,8 +209,6 @@ export function Dosen() {
           editItem
             ? {
                 nama: editItem.nama,
-                nidn: editItem.nidn,
-                jabatan_akademik: editItem.jabatan_akademik,
               }
             : undefined
         }
